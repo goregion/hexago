@@ -1,0 +1,29 @@
+# Binaries for programs and plugins
+*.exe
+*.dll
+*.so
+*.dylib
+*.test
+
+# Output of the go coverage tool
+*.out
+
+# Dependency directories (remove the leading slash if you want to ignore directories in the entire repository)
+vendor/
+
+# Go workspace file
+go.work
+go.work.sum
+
+# IDE/editor files
+.idea/
+.vscode/
+*.swp
+
+# Logs
+*.log
+
+# Build directories
+bin/
+build/
+dist/
