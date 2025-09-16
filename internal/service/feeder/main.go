@@ -1,4 +1,4 @@
-package service
+package service_feeder
 
 import (
 	"context"
@@ -16,14 +16,15 @@ import (
 )
 
 type config struct {
-	HttpAddr  string `env:"HTTP_ADDR" envDefault:":8080"`
-	NatsURL   string `env:"NATS_URL" envDefault:"nats://localhost:4222"`
-	NatsTopic string `env:"NATS_TOPIC" envDefault:"*.mt4_trade"`
+	HttpAddr             string `env:"HTTP_ADDR" envDefault:":8080"`
+	NatsURL              string `env:"NATS_URL" envDefault:"nats://localhost:4222"`
+	NatsTradeRecordTopic string `env:"NATS_TRADE_RECORD_TOPIC" envDefault:"MT4.TRADE"`
+	BlocklistPath        string `env:"BLOCKLIST_PATH" envDefault:"./blocklist.txt"`
 }
 
 const serviceName = "single-trade-feeder"
 
-func Feeder(ctx context.Context, logger *log.Logger) error {
+func Run(ctx context.Context, logger *log.Logger) error {
 	logger, ctx, logStopServiceLog := logger.StartService(ctx, serviceName)
 	defer logStopServiceLog()
 
@@ -36,11 +37,11 @@ func Feeder(ctx context.Context, logger *log.Logger) error {
 	defer natsClientClose()
 	logger.Info("nats client connected", "url", serviceConfig.NatsURL)
 
-	subscription, closeSubscription := must.Return2(natsClient.NewSubscription(serviceConfig.NatsTopic))
+	subscription, closeSubscription := must.Return2(natsClient.NewSubscription(serviceConfig.NatsTradeRecordTopic))
 	defer closeSubscription()
-	logger.Info("nats subscription created", "topic", serviceConfig.NatsTopic)
+	logger.Info("nats subscription created", "topic", serviceConfig.NatsTradeRecordTopic)
 
-	var tokenManager = jwt.NewTokenManager("your-secret-key", "path/to/blocklist.txt")
+	var tokenManager = jwt.NewTokenManager("your-secret-key", serviceConfig.BlocklistPath)
 
 	var wsHandler = adapter_ws.NewHandler(
 		ctx,

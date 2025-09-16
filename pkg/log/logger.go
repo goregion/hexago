@@ -66,8 +66,21 @@ func (l *Logger) Error(msg string, err error) {
 	}
 }
 
-func (l *Logger) LogIfError(msg string, err error) {
+func (l *Logger) LogIfError(err error, messages ...any) {
 	if err != nil && !errors.Is(err, context.Canceled) {
-		l.Logger.Error(msg, "error", err)
+		msg, args := formatMessage(err, messages...)
+		l.Logger.Error(msg, args...)
 	}
+}
+
+func formatMessage(err error, messages ...any) (string, []any) {
+	if len(messages) > 0 {
+		var msg = messages[0].(string)
+		if len(messages) > 1 {
+			var args = []any{err}
+			return msg, append(args, messages[1:]...)
+		}
+		return msg, []any{"error", err}
+	}
+	return err.Error(), nil
 }

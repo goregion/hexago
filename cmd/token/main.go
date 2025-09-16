@@ -2,16 +2,13 @@ package main
 
 import (
 	"context"
-	service_feeder "feeder/internal/service/feeder"
+	service_token_generator "feeder/internal/service/token-generator"
 	"feeder/pkg/log"
-	"feeder/pkg/tools"
 	"log/slog"
 	"os"
 )
 
 func main() {
-	ctx := tools.MakeGrexitWithContext(context.Background())
-
 	var logger = log.NewLogger(
 		slog.NewTextHandler(os.Stdout,
 			&slog.HandlerOptions{
@@ -21,6 +18,6 @@ func main() {
 	)
 
 	logger.LogIfError(
-		service_feeder.Run(ctx, logger),
+		service_token_generator.Run(context.Background(), logger),
 	)
 }
