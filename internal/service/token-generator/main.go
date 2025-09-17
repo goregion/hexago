@@ -29,6 +29,8 @@ func Run(ctx context.Context, logger *log.Logger) error {
 
 	var tokenManager = jwt.NewTokenManager("your-secret-key", serviceConfig.BlocklistPath)
 
+	const dateFormat = "02/01/2006"
+
 	cmd := &cli.Command{
 		Name:      "generate-token",
 		Usage:     "Generate a JWT token for a client",
@@ -42,7 +44,7 @@ func Run(ctx context.Context, logger *log.Logger) error {
 			&cli.StringFlag{
 				Name:  "expiration",
 				Usage: "token expiration date (02/01/2006 format, date only, time will be set to 00:00:00). Default is 1 year from today.",
-				Value: time.Now().AddDate(1, 0, 0).Truncate(24 * time.Hour).Format("02/01/2006"),
+				Value: time.Now().AddDate(1, 0, 0).Truncate(24 * time.Hour).Format(dateFormat),
 			},
 		},
 		Action: func(ctx context.Context, cmd *cli.Command) error {
@@ -52,11 +54,7 @@ func Run(ctx context.Context, logger *log.Logger) error {
 				return nil
 			}
 			expiration := cmd.String("expiration")
-			if expiration == "" {
-				expiration = time.Now().AddDate(1, 0, 0).Truncate(24 * time.Hour).Format("02/01/2006")
-			}
-			// Parse only the date part, set time to 00:00:00 UTC
-			expDate, err := time.Parse("2006-01-02T15:04:05Z", expiration)
+			expDate, err := time.Parse(dateFormat, expiration)
 			if err != nil {
 				logger.Error("invalid expiration date", err)
 				return err
