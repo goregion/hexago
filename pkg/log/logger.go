@@ -60,8 +60,14 @@ func GetLogger(ctx context.Context) *Logger {
 	return log.(*Logger)
 }
 
-func (l *Logger) Error(msg string, err error) {
-	if err != nil && !errors.Is(err, context.Canceled) {
+func (l *Logger) Error(msg string, err ...error) {
+	var erros []any
+	for _, err := range err {
+		if err != nil && !errors.Is(err, context.Canceled) {
+			erros = append(erros, "error", err)
+		}
+	}
+	if len(erros) > 0 {
 		l.Logger.Error(msg, "error", err)
 	}
 }

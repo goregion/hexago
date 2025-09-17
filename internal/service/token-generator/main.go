@@ -6,6 +6,7 @@ import (
 	"feeder/pkg/log"
 	"feeder/pkg/tools"
 	"os"
+	"time"
 
 	"github.com/goregion/must"
 	"github.com/urfave/cli/v3"
@@ -38,15 +39,35 @@ func Run(ctx context.Context, logger *log.Logger) error {
 				Required: true,
 				Usage:    "client name to generate token for",
 			},
+			&cli.StringFlag{
+				Name:  "expiration",
+				Usage: "token expiration date (02/01/2006 format, date only, time will be set to 00:00:00). Default is 1 year from today.",
+				Value: time.Now().AddDate(1, 0, 0).Truncate(24 * time.Hour).Format("02/01/2006"),
+			},
 		},
 		Action: func(ctx context.Context, cmd *cli.Command) error {
 			client := cmd.String("client")
-			token, err := tokenManager.GenerateToken(client)
+			if client == "" {
+				logger.Error("client arg is required")
+				return nil
+			}
+			expiration := cmd.String("expiration")
+			if expiration == "" {
+				expiration = time.Now().AddDate(1, 0, 0).Truncate(24 * time.Hour).Format("02/01/2006")
+			}
+			// Parse only the date part, set time to 00:00:00 UTC
+			expDate, err := time.Parse("2006-01-02T15:04:05Z", expiration)
+			if err != nil {
+				logger.Error("invalid expiration date", err)
+				return err
+			}
+			expDate = expDate.Truncate(24 * time.Hour)
+			token, err := tokenManager.GenerateToken(client, expDate)
 			if err != nil {
 				logger.Error("error generating token", err)
 				return err
 			}
-			logger.Info("generated token", "client", client, "token", token)
+			logger.Info("generated token", "client", client, "token", token, "expiration", expDate)
 			return nil
 		},
 	}

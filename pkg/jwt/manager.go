@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 )
@@ -73,9 +74,10 @@ func (tm *TokenManager) ParseToken(tokenString string) (client string, err error
 	return "", fmt.Errorf("invalid token")
 }
 
-func (tm *TokenManager) GenerateToken(client string) (string, error) {
+func (tm *TokenManager) GenerateToken(client string, expiration time.Time) (string, error) {
 	claims := jwt.MapClaims{
 		"client": client,
+		"exp":    expiration.Unix(),
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	tokenString, err := token.SignedString(tm.secret)

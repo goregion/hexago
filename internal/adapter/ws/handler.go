@@ -43,11 +43,17 @@ func NewHandler(
 }
 
 func (h *Handler) PublishSingleTrade(ctx context.Context, trade *entity.SingleTrade) error {
+	if trade == nil {
+		return nil
+	}
 	h.connections.Range(func(key, value any) bool {
 		conn := key.(*websocket.Conn)
 		cancel := value.(context.CancelFunc)
 
-		buff, err := protojson.Marshal(trade)
+		buff, err := protojson.MarshalOptions{
+			UseProtoNames:     true,
+			EmitDefaultValues: true,
+		}.Marshal(trade)
 		if err != nil {
 			cancel()
 			return true
@@ -98,7 +104,7 @@ func (h *Handler) handler(ctx context.Context, cancelCtx context.CancelFunc, w h
 	ip := h.getIP(r)
 	id, err := h.openConnection(ctx, ip, authToken)
 	if err != nil {
-		http.Error(w, "Failed to open connection", http.StatusInternalServerError)
+		http.Error(w, "Failed to open connection", http.StatusUnauthorized)
 		return
 	}
 
@@ -117,12 +123,13 @@ func (h *Handler) handler(ctx context.Context, cancelCtx context.CancelFunc, w h
 
 	connection.SetReadLimit(1 << 20)
 
-	closeConn := h.addConnection(connection, cancelCtx)
-	defer closeConn()
+	deleteConn := h.addConnection(connection, cancelCtx)
+	defer deleteConn()
 
-	ticker := time.NewTicker(10 * time.Second)
+	ticker := time.NewTicker(1 * time.Second)
 	defer ticker.Stop()
 
+	ctx = connection.CloseRead(ctx)
 	for range tools.IteratorInt64WithContext(ctx) {
 		select {
 		case <-ticker.C:

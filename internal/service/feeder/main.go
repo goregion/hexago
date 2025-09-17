@@ -47,6 +47,8 @@ func Run(ctx context.Context, logger *log.Logger) error {
 		ctx,
 		"/ws/v1",
 		func(ctx context.Context, ip string, token string) (string, error) {
+			//return "test1", nil
+
 			client, err := tokenManager.ParseToken(token)
 			if err != nil {
 				return "", err

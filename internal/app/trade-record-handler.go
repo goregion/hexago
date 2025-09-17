@@ -33,10 +33,10 @@ func (h *TradeRecordHandler) HandleTradeRecord(ctx context.Context, record *enti
 	}
 
 	var price = record.OpenPrice
-	var timestamp = record.OpenTime
-	if record.CloseTime != 0 {
+	var timestamp = record.OpenTimeMs
+	if record.CloseTimeMs != 0 {
 		price = record.ClosePrice
-		timestamp = record.CloseTime
+		timestamp = record.CloseTimeMs
 		if direction == entity.SingleTrade_B {
 			direction = entity.SingleTrade_S
 		}
@@ -45,7 +45,7 @@ func (h *TradeRecordHandler) HandleTradeRecord(ctx context.Context, record *enti
 	var singleTrade = &entity.SingleTrade{
 		Direction:      direction,
 		Price:          price,
-		Timestamp:      int64(timestamp) * 1000,
+		Timestamp:      timestamp,
 		InstrumentName: record.Symbol,
 		Amount:         int64(record.Volume * record.SymbolCsize),
 		Currency1:      record.SymbolCurrency1,
