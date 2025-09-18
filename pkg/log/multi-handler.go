@@ -33,7 +33,9 @@ func (h *multiHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
 	for i, handler := range h.handlers {
 		handlers[i] = handler.WithAttrs(attrs)
 	}
-	return &multiHandler{handlers: handlers}
+	return &multiHandler{
+		handlers: handlers,
+	}
 }
 
 func (h *multiHandler) WithGroup(name string) slog.Handler {
@@ -41,5 +43,7 @@ func (h *multiHandler) WithGroup(name string) slog.Handler {
 	for i, handler := range h.handlers {
 		handlers[i] = handler.WithGroup(name)
 	}
-	return &multiHandler{handlers: handlers}
+	return &multiHandler{
+		handlers: handlers,
+	}
 }

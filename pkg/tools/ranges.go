@@ -5,22 +5,6 @@ import (
 	"iter"
 )
 
-type integer interface {
-	~int | ~int8 | ~int16 | ~int32 | ~int64 | ~uint | ~uint8 | ~uint16 | ~uint32 | ~uint64 | ~uintptr
-}
-
-func IntegerIterator[Type integer]() iter.Seq[Type] {
-	return func(yield func(Type) bool) {
-		var i Type
-		for {
-			if !yield(i) {
-				return
-			}
-			i++
-		}
-	}
-}
-
 func IteratorWithContext[ValueType any](ctx context.Context, iterator iter.Seq[ValueType]) iter.Seq[ValueType] {
 	return func(yield func(ValueType) bool) {
 		for v := range iterator {
@@ -51,6 +35,27 @@ func Iterator2WithContext[KeyType any, ValueType any](ctx context.Context, itera
 	}
 }
 
-func IteratorInt64WithContext(ctx context.Context) iter.Seq[int64] {
-	return IteratorWithContext(ctx, IntegerIterator[int64]())
+type integer interface {
+	~int | ~int8 | ~int16 | ~int32 | ~int64 | ~uint | ~uint8 | ~uint16 | ~uint32 | ~uint64 | ~uintptr
+}
+
+func IntegerIteratorWithContext[Type integer](ctx context.Context) iter.Seq[Type] {
+	return func(yield func(Type) bool) {
+		var i Type
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				if !yield(i) {
+					return
+				}
+			}
+			i++
+		}
+	}
+}
+
+func Uint64IteratorWithContext(ctx context.Context) iter.Seq[uint64] {
+	return IntegerIteratorWithContext[uint64](ctx)
 }

@@ -7,17 +7,22 @@ import (
 	"syscall"
 )
 
-func MakeGrexitWithContext(ctx context.Context) context.Context {
+// MakeGrExitContext returns a context that is canceled on SIGINT or SIGTERM.
+func MakeGrExitContext(ctx context.Context) context.Context {
 	var interrupt = make(chan os.Signal, 1)
 	ctx, cancel := context.WithCancel(ctx)
 	go func() {
 		defer cancel()
 
-		signal.Notify(interrupt, os.Interrupt, syscall.SIGTERM)
+		signal.Notify(interrupt,
+			syscall.SIGINT,
+			syscall.SIGTERM,
+		)
+
 		select {
-		case <-interrupt:
+		case <-interrupt: // caught SIGINT or SIGTERM
 			cancel()
-		case <-ctx.Done():
+		case <-ctx.Done(): // context was canceled elsewhere
 		}
 	}()
 	return ctx
