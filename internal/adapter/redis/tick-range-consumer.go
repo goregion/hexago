@@ -26,8 +26,8 @@ func NewTickRangeConsumer(redisClient *redis.Client, consumer port.TickRangeCons
 func (h *TickRangeConsumer) readNext(ctx context.Context, symbol string, from time.Time, to time.Time) error {
 	slice, err := h.redisClient.XRange(ctx,
 		makeTickStreamKey(symbol),
-		makeTickID(from.UnixMilli()),
-		makeTickID(to.UnixMilli()),
+		makeTickID(from.UnixMilli(), "0"),
+		makeTickID(to.UnixMilli(), "999"),
 	).Result()
 	if err != nil {
 		return errors.Wrap(err, "failed to read tick from redis stream")
@@ -40,13 +40,25 @@ func (h *TickRangeConsumer) readNext(ctx context.Context, symbol string, from ti
 		)
 	}
 
-	return h.consumer.ConsumeTickRange(ctx, tickRange)
+	return h.consumer.ConsumeTickRange(ctx,
+		&entity.TickRange{
+			Symbol:    symbol,
+			FromMs:    from.UnixMilli(),
+			ToMs:      to.UnixMilli(),
+			TickSlice: tickRange,
+		},
+	)
 }
 
-func (h *TickRangeConsumer) RunBlocked(ctx context.Context, startTime time.Time, timeframeName time.Duration, symbols []string) error {
-	for timestamp := range tools.DelayedTimeIteratorWithContext(ctx, startTime, timeframeName) {
+func (h *TickRangeConsumer) RunBlocked(ctx context.Context, startTime time.Time, timeframe time.Duration, symbols []string) error {
+	for timestamp := range tools.DelayedTimeIteratorWithContext(ctx, startTime, timeframe) {
 		for _, symbol := range symbols {
-			if err := h.readNext(ctx, symbol, timestamp.Add(-timeframeName), timestamp); err != nil {
+			// Add 1 millisecond to avoid re-reading the last tick of the previous range
+			// Example: if timeframe is 1 minute, and last read tick was at 12:00:00.000,
+			// next range should start from 12:00:00.001 to 12:01:00.000,
+			// which is included in the previous range.
+			var fromTime = timestamp.Add(-timeframe).Add(time.Millisecond)
+			if err := h.readNext(ctx, symbol, fromTime, timestamp); err != nil {
 				return errors.Wrap(err, "failed to consume tick range")
 			}
 		}

@@ -7,5 +7,5 @@ import (
 )
 
 type TickRangeConsumer interface {
-	ConsumeTickRange(context.Context, []*entity.Tick) error
+	ConsumeTickRange(context.Context, *entity.TickRange) error
 }

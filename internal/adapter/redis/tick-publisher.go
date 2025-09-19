@@ -21,7 +21,7 @@ func NewTickPublisher(redisClient *redis.Client) *TickPublisher {
 func (p *TickPublisher) PublishTick(ctx context.Context, tick *entity.Tick) error {
 	if err := p.redisClient.XAdd(ctx,
 		&redis.XAddArgs{
-			ID:     makeTickID(tick.TimestampMs),
+			ID:     makeTickID(tick.TimestampMs, "*"),
 			Stream: makeTickStreamKey(tick.Symbol),
 			Values: mustMarshalTick(tick),
 		},

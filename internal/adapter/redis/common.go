@@ -37,8 +37,8 @@ func makeTickStreamKey(symbol string) string {
 	return "tick:" + symbol
 }
 
-func makeTickID(timestamp int64) string {
-	return strconv.FormatInt(timestamp, 10) + "-0"
+func makeTickID(timestamp int64, subID string) string {
+	return strconv.FormatInt(timestamp, 10) + "-" + subID
 }
 
 func mustMarshalTick(message *entity.Tick) map[string]any {

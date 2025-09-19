@@ -25,9 +25,13 @@ func NewOHLCCreator(useBidOrAskPrice int, ohlcPublisher ...port.OHLCPublisher) *
 	}
 }
 
-func (p *OHLCCreator) ConsumeTickRange(ctx context.Context, ticks []*entity.Tick) error {
-	var ohlc entity.OHLC
-	for _, tick := range ticks {
+func (p *OHLCCreator) ConsumeTickRange(ctx context.Context, ticks *entity.TickRange) error {
+	var ohlc = &entity.OHLC{
+		Symbol:      ticks.Symbol,
+		CloseTimeMs: ticks.ToMs,
+	}
+
+	for _, tick := range ticks.TickSlice {
 		var price = tick.BestAskPrice
 		if p.useBidOrAskPrice == USE_BID_PRICE {
 			price = tick.BestBidPrice
@@ -43,14 +47,10 @@ func (p *OHLCCreator) ConsumeTickRange(ctx context.Context, ticks []*entity.Tick
 		if price < ohlc.Low || ohlc.Low == 0 {
 			ohlc.Low = price
 		}
-		if ohlc.Symbol == "" {
-			ohlc.Symbol = tick.Symbol
-		}
-		ohlc.CloseTimeMs = tick.TimestampMs
 	}
 
 	for _, p := range p.ohlcPublisher {
-		if err := p.PublishOHLC(ctx, &ohlc); err != nil {
+		if err := p.PublishOHLC(ctx, ohlc); err != nil {
 			return errors.Wrap(err, "failed to publish OHLC")
 		}
 	}
