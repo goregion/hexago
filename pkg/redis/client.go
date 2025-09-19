@@ -6,7 +6,8 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-type PubSub = redis.PubSub
+type XAddArgs = redis.XAddArgs
+type XReadArgs = redis.XReadArgs
 
 type Client struct {
 	*redis.Client

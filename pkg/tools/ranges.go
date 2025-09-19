@@ -3,6 +3,7 @@ package tools
 import (
 	"context"
 	"iter"
+	"time"
 )
 
 func IteratorWithContext[ValueType any](ctx context.Context, iterator iter.Seq[ValueType]) iter.Seq[ValueType] {
@@ -58,4 +59,22 @@ func IntegerIteratorWithContext[Type integer](ctx context.Context) iter.Seq[Type
 
 func Uint64IteratorWithContext(ctx context.Context) iter.Seq[uint64] {
 	return IntegerIteratorWithContext[uint64](ctx)
+}
+
+func DelayedTimeIteratorWithContext(ctx context.Context, startTime time.Time, duration time.Duration) iter.Seq[time.Time] {
+	return func(yield func(time.Time) bool) {
+		for {
+			var toTime = startTime.Truncate(duration).Add(duration)
+			var timer = time.NewTimer(time.Until(toTime))
+			select {
+			case <-ctx.Done():
+				return
+			case timestamp := <-timer.C:
+				if !yield(timestamp) {
+					return
+				}
+			}
+			startTime = toTime
+		}
+	}
 }

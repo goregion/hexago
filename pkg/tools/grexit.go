@@ -8,7 +8,13 @@ import (
 )
 
 // MakeGrExitContext returns a context that is canceled on SIGINT or SIGTERM.
-func MakeGrExitContext(ctx context.Context) context.Context {
+func MakeGrExitWithContext(ctx context.Context) context.Context {
+	ctx, _ = MakeGrExitWithCancelContext(ctx)
+	return ctx
+}
+
+// MakeGrExitContext returns a context that is canceled on SIGINT or SIGTERM.
+func MakeGrExitWithCancelContext(ctx context.Context) (context.Context, context.CancelFunc) {
 	var interrupt = make(chan os.Signal, 1)
 	ctx, cancel := context.WithCancel(ctx)
 	go func() {
@@ -25,5 +31,5 @@ func MakeGrExitContext(ctx context.Context) context.Context {
 		case <-ctx.Done(): // context was canceled elsewhere
 		}
 	}()
-	return ctx
+	return ctx, cancel
 }
