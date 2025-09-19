@@ -54,11 +54,9 @@ func (h *TickRangeConsumer) RunBlocked(ctx context.Context, startTime time.Time,
 	for timestamp := range tools.DelayedTimeIteratorWithContext(ctx, startTime, timeframe) {
 		for _, symbol := range symbols {
 			// Add 1 millisecond to avoid re-reading the last tick of the previous range
-			// Example: if timeframe is 1 minute, and last read tick was at 12:00:00.000,
-			// next range should start from 12:00:00.001 to 12:01:00.000,
-			// which is included in the previous range.
-			var fromTime = timestamp.Add(-timeframe).Add(time.Millisecond)
-			if err := h.readNext(ctx, symbol, fromTime, timestamp); err != nil {
+			var fromTime = timestamp.Add(-timeframe)
+			var toTime = timestamp.Add(-time.Millisecond)
+			if err := h.readNext(ctx, symbol, fromTime, toTime); err != nil {
 				return errors.Wrap(err, "failed to consume tick range")
 			}
 		}

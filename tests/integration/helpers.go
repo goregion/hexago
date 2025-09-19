@@ -93,7 +93,7 @@ func CreateTestOHLC(symbol string, timeMs int64) *entity.OHLC {
 		High:        105.0,
 		Low:         98.0,
 		Close:       102.0,
-		CloseTimeMs: timeMs,
+		TimestampMs: timeMs,
 	}
 }
 

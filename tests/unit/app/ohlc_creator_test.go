@@ -65,8 +65,8 @@ func TestOHLCCreator_ConsumeTickRange_WithBidPrice(t *testing.T) {
 	if ohlc.Close != 102.0 {
 		t.Errorf("Expected close 102.0, got %f", ohlc.Close)
 	}
-	if ohlc.CloseTimeMs != 5000 {
-		t.Errorf("Expected close time 5000, got %d", ohlc.CloseTimeMs)
+	if ohlc.TimestampMs != 5000 {
+		t.Errorf("Expected close time 5000, got %d", ohlc.TimestampMs)
 	}
 }
 

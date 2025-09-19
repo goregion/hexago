@@ -28,7 +28,7 @@ func NewOHLCCreator(useBidOrAskPrice int, ohlcPublisher ...port.OHLCPublisher) *
 func (p *OHLCCreator) ConsumeTickRange(ctx context.Context, ticks *entity.TickRange) error {
 	var ohlc = &entity.OHLC{
 		Symbol:      ticks.Symbol,
-		CloseTimeMs: ticks.ToMs,
+		TimestampMs: ticks.ToMs,
 	}
 
 	for _, tick := range ticks.TickSlice {

@@ -167,6 +167,6 @@ func CreateTestOHLC(symbol string, open, high, low, close float64, closeTimeMs i
 		High:        high,
 		Low:         low,
 		Close:       close,
-		CloseTimeMs: closeTimeMs,
+		TimestampMs: closeTimeMs,
 	}
 }

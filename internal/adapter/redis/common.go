@@ -13,19 +13,19 @@ func makeOHLCStreamName(timeframeName string, symbol string) string {
 
 func mustMarshalOHLC(ohlc *entity.OHLC) map[string]any {
 	return map[string]any{
-		"symbol":        ohlc.Symbol,
-		"close_time_ms": ohlc.CloseTimeMs,
-		"open":          ohlc.Open,
-		"high":          ohlc.High,
-		"low":           ohlc.Low,
-		"close":         ohlc.Close,
+		"symbol":       ohlc.Symbol,
+		"timestamp_ms": ohlc.TimestampMs,
+		"open":         ohlc.Open,
+		"high":         ohlc.High,
+		"low":          ohlc.Low,
+		"close":        ohlc.Close,
 	}
 }
 
 func mustUnmarshalOHLC(values map[string]any) *entity.OHLC {
 	return &entity.OHLC{
 		Symbol:      values["symbol"].(string),
-		CloseTimeMs: must.Return(strconv.ParseInt(values["close_time_ms"].(string), 10, 64)),
+		TimestampMs: must.Return(strconv.ParseInt(values["timestamp_ms"].(string), 10, 64)),
 		Open:        must.Return(strconv.ParseFloat(values["open"].(string), 64)),
 		High:        must.Return(strconv.ParseFloat(values["high"].(string), 64)),
 		Low:         must.Return(strconv.ParseFloat(values["low"].(string), 64)),

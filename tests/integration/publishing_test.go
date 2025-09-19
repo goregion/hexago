@@ -61,8 +61,8 @@ func TestOHLCPublishingAndReceiving(t *testing.T) {
 	if receivedOHLC.Close != testOHLC.Close {
 		t.Errorf("Expected Close %f, got %f", testOHLC.Close, receivedOHLC.Close)
 	}
-	if receivedOHLC.ClosesTimeMs != testOHLC.CloseTimeMs {
-		t.Errorf("Expected ClosesTimeMs %d, got %d", testOHLC.CloseTimeMs, receivedOHLC.ClosesTimeMs)
+	if receivedOHLC.TimestampMs != testOHLC.TimestampMs {
+		t.Errorf("Expected TimestampMs %d, got %d", testOHLC.TimestampMs, receivedOHLC.TimestampMs)
 	}
 
 	t.Log("OHLC publishing and receiving test passed")
@@ -100,7 +100,7 @@ func TestMultipleOHLCPublishing(t *testing.T) {
 			High:        float64(105 + i),
 			Low:         float64(98 + i),
 			Close:       float64(102 + i),
-			CloseTimeMs: baseTime + int64(i*1000),
+			TimestampMs: baseTime + int64(i*1000),
 		}
 	}
 
@@ -130,8 +130,8 @@ func TestMultipleOHLCPublishing(t *testing.T) {
 		if receivedOHLC.Close != expectedOHLC.Close {
 			t.Errorf("Message %d: Expected Close %f, got %f", i, expectedOHLC.Close, receivedOHLC.Close)
 		}
-		if receivedOHLC.ClosesTimeMs != expectedOHLC.CloseTimeMs {
-			t.Errorf("Message %d: Expected ClosesTimeMs %d, got %d", i, expectedOHLC.CloseTimeMs, receivedOHLC.ClosesTimeMs)
+		if receivedOHLC.TimestampMs != expectedOHLC.TimestampMs {
+			t.Errorf("Message %d: Expected TimestampMs %d, got %d", i, expectedOHLC.TimestampMs, receivedOHLC.TimestampMs)
 		}
 	}
 

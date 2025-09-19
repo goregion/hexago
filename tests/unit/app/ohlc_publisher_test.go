@@ -57,8 +57,8 @@ func TestOHLCPublisher_ConsumeOHLC_SinglePublisher(t *testing.T) {
 	if publishedOHLC.Close != ohlc.Close {
 		t.Errorf("Expected close %f, got %f", ohlc.Close, publishedOHLC.Close)
 	}
-	if publishedOHLC.CloseTimeMs != ohlc.CloseTimeMs {
-		t.Errorf("Expected close time %d, got %d", ohlc.CloseTimeMs, publishedOHLC.CloseTimeMs)
+	if publishedOHLC.TimestampMs != ohlc.TimestampMs {
+		t.Errorf("Expected close time %d, got %d", ohlc.TimestampMs, publishedOHLC.TimestampMs)
 	}
 }
 
@@ -226,8 +226,8 @@ func TestOHLCPublisher_ConsumeOHLC_MultipleOHLCs(t *testing.T) {
 		if publishedOHLC.Symbol != expectedOHLC.Symbol {
 			t.Errorf("OHLC %d: Expected symbol %s, got %s", i, expectedOHLC.Symbol, publishedOHLC.Symbol)
 		}
-		if publishedOHLC.CloseTimeMs != expectedOHLC.CloseTimeMs {
-			t.Errorf("OHLC %d: Expected close time %d, got %d", i, expectedOHLC.CloseTimeMs, publishedOHLC.CloseTimeMs)
+		if publishedOHLC.TimestampMs != expectedOHLC.TimestampMs {
+			t.Errorf("OHLC %d: Expected close time %d, got %d", i, expectedOHLC.TimestampMs, publishedOHLC.TimestampMs)
 		}
 	}
 }

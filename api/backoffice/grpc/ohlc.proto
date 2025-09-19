@@ -8,7 +8,7 @@ message OHLC {
 	double high			= 2;
 	double low			= 3;
 	double close		= 4;
-	int64 closesTimeMs	= 5; 
+	int64 timestampMs	= 5;
 }
 
 service OHLCService {

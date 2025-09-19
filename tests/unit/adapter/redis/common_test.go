@@ -125,7 +125,7 @@ func TestOHLCMarshaling(t *testing.T) {
 			// Test marshaling logic
 			marshaled := map[string]any{
 				"symbol":        tc.ohlc.Symbol,
-				"close_time_ms": tc.ohlc.CloseTimeMs,
+				"close_time_ms": tc.ohlc.TimestampMs,
 				"open":          tc.ohlc.Open,
 				"high":          tc.ohlc.High,
 				"low":           tc.ohlc.Low,
@@ -136,8 +136,8 @@ func TestOHLCMarshaling(t *testing.T) {
 			if marshaled["symbol"] != tc.ohlc.Symbol {
 				t.Errorf("Expected symbol %s, got %v", tc.ohlc.Symbol, marshaled["symbol"])
 			}
-			if marshaled["close_time_ms"] != tc.ohlc.CloseTimeMs {
-				t.Errorf("Expected close_time_ms %d, got %v", tc.ohlc.CloseTimeMs, marshaled["close_time_ms"])
+			if marshaled["close_time_ms"] != tc.ohlc.TimestampMs {
+				t.Errorf("Expected close_time_ms %d, got %v", tc.ohlc.TimestampMs, marshaled["close_time_ms"])
 			}
 			if marshaled["open"] != tc.ohlc.Open {
 				t.Errorf("Expected open %f, got %v", tc.ohlc.Open, marshaled["open"])

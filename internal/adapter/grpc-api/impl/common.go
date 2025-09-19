@@ -10,10 +10,10 @@ func mustMarshalOHLC(ohlc *entity.OHLC) *gen.OHLC {
 		return nil
 	}
 	return &gen.OHLC{
-		Open:         ohlc.Open,
-		Close:        ohlc.Close,
-		High:         ohlc.High,
-		Low:          ohlc.Low,
-		ClosesTimeMs: ohlc.CloseTimeMs,
+		Open:        ohlc.Open,
+		Close:       ohlc.Close,
+		High:        ohlc.High,
+		Low:         ohlc.Low,
+		TimestampMs: ohlc.TimestampMs,
 	}
 }

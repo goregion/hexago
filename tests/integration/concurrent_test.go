@@ -256,7 +256,7 @@ func TestConcurrentPublishing(t *testing.T) {
 					High:        float64(105 + publisherId*10 + j),
 					Low:         float64(98 + publisherId*10 + j),
 					Close:       float64(102 + publisherId*10 + j),
-					CloseTimeMs: time.Now().UnixMilli() + int64(publisherId*1000+j*100),
+					TimestampMs: time.Now().UnixMilli() + int64(publisherId*1000+j*100),
 				}
 				err := testServer.Server().PublishOHLC(ctx, testOHLC)
 				if err != nil {
