@@ -3,13 +3,13 @@ package main
 import (
 	"context"
 
-	service_ohlc_generator "github.com/goregion/hexago/internal/service/ohlc-generator"
+	app_ohlc_generator "github.com/goregion/hexago/internal/app/ohlc-generator"
 	"github.com/goregion/hexago/pkg/log"
 	"github.com/goregion/hexago/pkg/tools"
 )
 
 func main() {
-	tools.RunService(
+	tools.RunApp(
 		// context with graceful exit on SIGINT, SIGTERM
 		tools.MakeGrExitWithContext(
 			context.Background(),
@@ -18,7 +18,7 @@ func main() {
 		log.NewLogger(
 			log.NewTextStdOutHandler(),
 		),
-		// service to run
-		service_ohlc_generator.RunBlocked,
+		// app to run
+		app_ohlc_generator.RunBlocked,
 	)
 }

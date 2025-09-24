@@ -3,13 +3,13 @@ package main
 import (
 	"context"
 
-	service_backoffice_api "github.com/goregion/hexago/internal/service/backoffice-api"
+	app_backoffice_api "github.com/goregion/hexago/internal/app/backoffice-api"
 	"github.com/goregion/hexago/pkg/log"
 	"github.com/goregion/hexago/pkg/tools"
 )
 
 func main() {
-	tools.RunService(
+	tools.RunApp(
 		// context with graceful exit on SIGINT, SIGTERM
 		tools.MakeGrExitWithContext(
 			context.Background(),
@@ -18,7 +18,7 @@ func main() {
 		log.NewLogger(
 			log.NewTextStdOutHandler(),
 		),
-		// service to run
-		service_backoffice_api.RunBlocked,
+		// app to run
+		app_backoffice_api.RunBlocked,
 	)
 }

@@ -3,13 +3,13 @@ package main
 import (
 	"context"
 
-	service_binance_tick_consumer "github.com/goregion/hexago/internal/service/binance-tick-consumer"
+	app_binance_tick_consumer "github.com/goregion/hexago/internal/app/binance-tick-consumer"
 	"github.com/goregion/hexago/pkg/log"
 	"github.com/goregion/hexago/pkg/tools"
 )
 
 func main() {
-	tools.RunService(
+	tools.RunApp(
 		// context with graceful exit on SIGINT, SIGTERM
 		tools.MakeGrExitWithContext(
 			context.Background(),
@@ -18,7 +18,7 @@ func main() {
 		log.NewLogger(
 			log.NewTextStdOutHandler(),
 		),
-		// service to run
-		service_binance_tick_consumer.RunBlocked,
+		// app to run
+		app_binance_tick_consumer.RunBlocked,
 	)
 }

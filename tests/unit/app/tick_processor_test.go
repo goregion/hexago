@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/goregion/hexago/internal/app"
+	service_tick "github.com/goregion/hexago/internal/service/tick"
 	unit "github.com/goregion/hexago/tests/unit"
 )
 
@@ -12,7 +12,7 @@ func TestTickProcessor_NewTickProcessor(t *testing.T) {
 	mockPublisher1 := unit.NewMockTickPublisher()
 	mockPublisher2 := unit.NewMockTickPublisher()
 
-	processor := app.NewTickProcessor(mockPublisher1, mockPublisher2)
+	processor := service_tick.NewTickProcessor(mockPublisher1, mockPublisher2)
 
 	if processor == nil {
 		t.Fatal("TickProcessor should not be nil")
@@ -21,7 +21,7 @@ func TestTickProcessor_NewTickProcessor(t *testing.T) {
 
 func TestTickProcessor_ConsumeLPTick_FirstTime(t *testing.T) {
 	mockPublisher := unit.NewMockTickPublisher()
-	processor := app.NewTickProcessor(mockPublisher)
+	processor := service_tick.NewTickProcessor(mockPublisher)
 
 	lpTick := unit.CreateTestLPTick("BTCUSDT", 100.0, 101.0)
 
@@ -57,7 +57,7 @@ func TestTickProcessor_ConsumeLPTick_FirstTime(t *testing.T) {
 
 func TestTickProcessor_ConsumeLPTick_SamePrices_NoDuplicate(t *testing.T) {
 	mockPublisher := unit.NewMockTickPublisher()
-	processor := app.NewTickProcessor(mockPublisher)
+	processor := service_tick.NewTickProcessor(mockPublisher)
 
 	lpTick := unit.CreateTestLPTick("BTCUSDT", 100.0, 101.0)
 
@@ -87,7 +87,7 @@ func TestTickProcessor_ConsumeLPTick_SamePrices_NoDuplicate(t *testing.T) {
 
 func TestTickProcessor_ConsumeLPTick_DifferentPrices_ShouldPublish(t *testing.T) {
 	mockPublisher := unit.NewMockTickPublisher()
-	processor := app.NewTickProcessor(mockPublisher)
+	processor := service_tick.NewTickProcessor(mockPublisher)
 
 	lpTick1 := unit.CreateTestLPTick("BTCUSDT", 100.0, 101.0)
 	lpTick2 := unit.CreateTestLPTick("BTCUSDT", 102.0, 103.0) // Different prices
@@ -129,7 +129,7 @@ func TestTickProcessor_ConsumeLPTick_DifferentPrices_ShouldPublish(t *testing.T)
 
 func TestTickProcessor_ConsumeLPTick_OnlyBidChanges(t *testing.T) {
 	mockPublisher := unit.NewMockTickPublisher()
-	processor := app.NewTickProcessor(mockPublisher)
+	processor := service_tick.NewTickProcessor(mockPublisher)
 
 	lpTick1 := unit.CreateTestLPTick("ETHUSDT", 200.0, 201.0)
 	lpTick2 := unit.CreateTestLPTick("ETHUSDT", 199.0, 201.0) // Only bid changes
@@ -154,7 +154,7 @@ func TestTickProcessor_ConsumeLPTick_OnlyBidChanges(t *testing.T) {
 
 func TestTickProcessor_ConsumeLPTick_OnlyAskChanges(t *testing.T) {
 	mockPublisher := unit.NewMockTickPublisher()
-	processor := app.NewTickProcessor(mockPublisher)
+	processor := service_tick.NewTickProcessor(mockPublisher)
 
 	lpTick1 := unit.CreateTestLPTick("ADAUSDT", 1.0, 1.1)
 	lpTick2 := unit.CreateTestLPTick("ADAUSDT", 1.0, 1.2) // Only ask changes
@@ -179,7 +179,7 @@ func TestTickProcessor_ConsumeLPTick_OnlyAskChanges(t *testing.T) {
 
 func TestTickProcessor_ConsumeLPTick_DifferentSymbols(t *testing.T) {
 	mockPublisher := unit.NewMockTickPublisher()
-	processor := app.NewTickProcessor(mockPublisher)
+	processor := service_tick.NewTickProcessor(mockPublisher)
 
 	lpTick1 := unit.CreateTestLPTick("BTCUSDT", 100.0, 101.0)
 	lpTick2 := unit.CreateTestLPTick("ETHUSDT", 100.0, 101.0) // Same prices, different symbol
@@ -216,7 +216,7 @@ func TestTickProcessor_ConsumeLPTick_DifferentSymbols(t *testing.T) {
 func TestTickProcessor_ConsumeLPTick_MultiplePublishers(t *testing.T) {
 	mockPublisher1 := unit.NewMockTickPublisher()
 	mockPublisher2 := unit.NewMockTickPublisher()
-	processor := app.NewTickProcessor(mockPublisher1, mockPublisher2)
+	processor := service_tick.NewTickProcessor(mockPublisher1, mockPublisher2)
 
 	lpTick := unit.CreateTestLPTick("BTCUSDT", 100.0, 101.0)
 
@@ -257,7 +257,7 @@ func TestTickProcessor_ConsumeLPTick_PublisherError(t *testing.T) {
 	mockPublisher1.ShouldError = true
 	mockPublisher1.ErrorMessage = "publisher error"
 
-	processor := app.NewTickProcessor(mockPublisher1, mockPublisher2)
+	processor := service_tick.NewTickProcessor(mockPublisher1, mockPublisher2)
 
 	lpTick := unit.CreateTestLPTick("BTCUSDT", 100.0, 101.0)
 
@@ -279,7 +279,7 @@ func TestTickProcessor_ConsumeLPTick_PublisherError(t *testing.T) {
 }
 
 func TestTickProcessor_ConsumeLPTick_NoPublishers(t *testing.T) {
-	processor := app.NewTickProcessor() // No publishers
+	processor := service_tick.NewTickProcessor() // No publishers
 
 	lpTick := unit.CreateTestLPTick("BTCUSDT", 100.0, 101.0)
 
@@ -294,7 +294,7 @@ func TestTickProcessor_ConsumeLPTick_NoPublishers(t *testing.T) {
 
 func TestTickProcessor_ConsumeLPTick_ZeroPrices(t *testing.T) {
 	mockPublisher := unit.NewMockTickPublisher()
-	processor := app.NewTickProcessor(mockPublisher)
+	processor := service_tick.NewTickProcessor(mockPublisher)
 
 	lpTick := unit.CreateTestLPTick("TESTUSDT", 0.0, 0.0)
 
@@ -318,7 +318,7 @@ func TestTickProcessor_ConsumeLPTick_ZeroPrices(t *testing.T) {
 
 func TestTickProcessor_ConsumeLPTick_ConcurrentSymbols(t *testing.T) {
 	mockPublisher := unit.NewMockTickPublisher()
-	processor := app.NewTickProcessor(mockPublisher)
+	processor := service_tick.NewTickProcessor(mockPublisher)
 
 	symbols := []string{"BTCUSDT", "ETHUSDT", "ADAUSDT", "DOTUSDT"}
 

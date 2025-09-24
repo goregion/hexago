@@ -8,7 +8,7 @@ import (
 	"github.com/goregion/hexago/pkg/log"
 )
 
-func RunService(ctx context.Context,
+func RunApp(ctx context.Context,
 	logger *log.Logger,
 	service func(context.Context, *log.Logger),
 ) {
@@ -30,7 +30,7 @@ func RunService(ctx context.Context,
 	)
 }
 
-func RunServicesAsync(ctx context.Context,
+func RunAppAsync(ctx context.Context,
 	cancel context.CancelFunc,
 	logger *log.Logger,
 	services ...func(context.Context, *log.Logger),
@@ -38,7 +38,7 @@ func RunServicesAsync(ctx context.Context,
 	for _, service := range services {
 		go func() {
 			defer cancel()
-			RunService(
+			RunApp(
 				ctx,
 				logger,
 				service,

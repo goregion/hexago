@@ -56,8 +56,8 @@ func (s *Server) RunBlocked(ctx context.Context) error {
 	var grpcServer = grpc.NewServer()
 	gen.RegisterOHLCServiceServer(grpcServer, s)
 
-	err = tools.RunAsyncAndWait(ctx,
-		func() error {
+	err = tools.RunAsyncBlocked(ctx,
+		func(context.Context) error {
 			return grpcServer.Serve(listener)
 		},
 	)

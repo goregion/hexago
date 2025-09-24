@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/goregion/hexago/internal/app"
 	"github.com/goregion/hexago/internal/entity"
+	service_ohlc "github.com/goregion/hexago/internal/service/ohlc"
 	unit "github.com/goregion/hexago/tests/unit"
 )
 
@@ -13,7 +13,7 @@ func TestOHLCPublisher_NewOHLCPublisher(t *testing.T) {
 	mockPublisher1 := unit.NewMockOHLCPublisher()
 	mockPublisher2 := unit.NewMockOHLCPublisher()
 
-	publisher := app.NewOHLCPublisher(mockPublisher1, mockPublisher2)
+	publisher := service_ohlc.NewOHLCPublisher(mockPublisher1, mockPublisher2)
 
 	if publisher == nil {
 		t.Fatal("OHLCPublisher should not be nil")
@@ -22,7 +22,7 @@ func TestOHLCPublisher_NewOHLCPublisher(t *testing.T) {
 
 func TestOHLCPublisher_ConsumeOHLC_SinglePublisher(t *testing.T) {
 	mockPublisher := unit.NewMockOHLCPublisher()
-	publisher := app.NewOHLCPublisher(mockPublisher)
+	publisher := service_ohlc.NewOHLCPublisher(mockPublisher)
 
 	ohlc := unit.CreateTestOHLC("BTCUSDT", 100.0, 105.0, 98.0, 102.0, 1234567890)
 
@@ -67,7 +67,7 @@ func TestOHLCPublisher_ConsumeOHLC_MultiplePublishers(t *testing.T) {
 	mockPublisher2 := unit.NewMockOHLCPublisher()
 	mockPublisher3 := unit.NewMockOHLCPublisher()
 
-	publisher := app.NewOHLCPublisher(mockPublisher1, mockPublisher2, mockPublisher3)
+	publisher := service_ohlc.NewOHLCPublisher(mockPublisher1, mockPublisher2, mockPublisher3)
 
 	ohlc := unit.CreateTestOHLC("ETHUSDT", 200.0, 220.0, 190.0, 210.0, 1234567891)
 
@@ -110,7 +110,7 @@ func TestOHLCPublisher_ConsumeOHLC_MultiplePublishers(t *testing.T) {
 }
 
 func TestOHLCPublisher_ConsumeOHLC_NoPublishers(t *testing.T) {
-	publisher := app.NewOHLCPublisher() // No publishers
+	publisher := service_ohlc.NewOHLCPublisher() // No publishers
 
 	ohlc := unit.CreateTestOHLC("ADAUSDT", 1.0, 1.2, 0.9, 1.1, 1234567892)
 
@@ -131,7 +131,7 @@ func TestOHLCPublisher_ConsumeOHLC_FirstPublisherError(t *testing.T) {
 	mockPublisher1.ShouldError = true
 	mockPublisher1.ErrorMessage = "first publisher error"
 
-	publisher := app.NewOHLCPublisher(mockPublisher1, mockPublisher2)
+	publisher := service_ohlc.NewOHLCPublisher(mockPublisher1, mockPublisher2)
 
 	ohlc := unit.CreateTestOHLC("BTCUSDT", 100.0, 105.0, 98.0, 102.0, 1234567893)
 
@@ -161,7 +161,7 @@ func TestOHLCPublisher_ConsumeOHLC_SecondPublisherError(t *testing.T) {
 	mockPublisher2.ShouldError = true
 	mockPublisher2.ErrorMessage = "second publisher error"
 
-	publisher := app.NewOHLCPublisher(mockPublisher1, mockPublisher2, mockPublisher3)
+	publisher := service_ohlc.NewOHLCPublisher(mockPublisher1, mockPublisher2, mockPublisher3)
 
 	ohlc := unit.CreateTestOHLC("ETHUSDT", 200.0, 220.0, 190.0, 210.0, 1234567894)
 
@@ -196,7 +196,7 @@ func TestOHLCPublisher_ConsumeOHLC_SecondPublisherError(t *testing.T) {
 
 func TestOHLCPublisher_ConsumeOHLC_MultipleOHLCs(t *testing.T) {
 	mockPublisher := unit.NewMockOHLCPublisher()
-	publisher := app.NewOHLCPublisher(mockPublisher)
+	publisher := service_ohlc.NewOHLCPublisher(mockPublisher)
 
 	ohlcs := []*entity.OHLC{
 		unit.CreateTestOHLC("BTCUSDT", 100.0, 105.0, 98.0, 102.0, 1000),
@@ -234,7 +234,7 @@ func TestOHLCPublisher_ConsumeOHLC_MultipleOHLCs(t *testing.T) {
 
 func TestOHLCPublisher_ConsumeOHLC_NilOHLC(t *testing.T) {
 	mockPublisher := unit.NewMockOHLCPublisher()
-	publisher := app.NewOHLCPublisher(mockPublisher)
+	publisher := service_ohlc.NewOHLCPublisher(mockPublisher)
 
 	ctx := context.Background()
 	err := publisher.ConsumeOHLC(ctx, nil)

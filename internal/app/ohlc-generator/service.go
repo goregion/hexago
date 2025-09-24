@@ -1,11 +1,11 @@
-package service_binance_tick_consumer
+package app_ohlc_generator
 
 import (
 	"context"
+	"time"
 
-	adapter_binance "github.com/goregion/hexago/internal/adapter/binance"
 	adapter_redis "github.com/goregion/hexago/internal/adapter/redis"
-	"github.com/goregion/hexago/internal/app"
+	service_ohlc "github.com/goregion/hexago/internal/service/ohlc"
 	"github.com/goregion/hexago/pkg/log"
 	"github.com/goregion/hexago/pkg/redis"
 	"github.com/goregion/hexago/pkg/tools"
@@ -15,11 +15,12 @@ import (
 // Config holds the configuration for the service
 type config struct {
 	RedisURL string   `env:"REDIS_URL" required:"true"`
+	MysqlDSN string   `env:"MYSQL_DSN" required:"true"`
 	Symbols  []string `env:"SYMBOLS" required:"true"`
 }
 
 func RunBlocked(ctx context.Context, logger *log.Logger) {
-	logger, logStopService := logger.StartService("binance-tick-consumer")
+	logger, logStopService := logger.StartService("ohlc-generator")
 	defer logStopService()
 
 	// + Load config
@@ -35,27 +36,39 @@ func RunBlocked(ctx context.Context, logger *log.Logger) {
 	)
 	defer redisClose()
 	logger.Info("redis client connected")
+
+	// databaseClient, databaseClose := must.Return2(
+	// 	database.NewClient(ctx, "mysql", serviceConfig.MysqlDSN),
+	// )
+	// defer databaseClose()
+	// logger.Info("database mysql client connected")
 	// - Initialize clients
 
+	var ohlcTimeFrame = 1 * time.Minute
+
 	// + Initialize publishers
-	var tickPublisher = adapter_redis.NewTickPublisher(redisClient)
+	var ohlcRedisPublisher = adapter_redis.NewOHLCPublisher(redisClient, "m1")
+	//var ohlcDatabasePublisher = adapter_mysql.NewOHLCPublisher(ctx, databaseClient, "m1")
 	// - Initialize publishers
 
 	// + Initialize applications
-	var tickProcessor = app.NewTickProcessor(tickPublisher)
+	var ohlcProcessor = service_ohlc.NewOHLCCreator(service_ohlc.USE_BID_PRICE,
+		ohlcRedisPublisher,
+		//ohlcDatabasePublisher,
+	)
 	// - Initialize applications
 
 	// + Initialize consumers
-	var binanceListener = adapter_binance.NewLPTickConsumer(serviceConfig.Symbols, tickProcessor,
-		func(err error) {
-			logger.Error("failed to handle tick event", "error", err)
-		},
-	)
+	var tickRangeConsumer = adapter_redis.NewTickRangeConsumer(redisClient, ohlcProcessor)
 	// - Initialize consumers
 
 	// + Consume data
 	logger.LogIfError(
-		binanceListener.RunBlocked(ctx),
+		tickRangeConsumer.RunBlocked(ctx,
+			time.Now(),
+			ohlcTimeFrame,
+			serviceConfig.Symbols,
+		),
 	)
 	// - Consume data
 }

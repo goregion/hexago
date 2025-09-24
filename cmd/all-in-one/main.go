@@ -3,9 +3,9 @@ package main
 import (
 	"context"
 
-	service_backoffice_api "github.com/goregion/hexago/internal/service/backoffice-api"
-	service_binance_tick_consumer "github.com/goregion/hexago/internal/service/binance-tick-consumer"
-	service_ohlc_generator "github.com/goregion/hexago/internal/service/ohlc-generator"
+	app_backoffice_api "github.com/goregion/hexago/internal/app/backoffice-api"
+	app_binance_tick_consumer "github.com/goregion/hexago/internal/app/binance-tick-consumer"
+	app_ohlc_generator "github.com/goregion/hexago/internal/app/ohlc-generator"
 	"github.com/goregion/hexago/pkg/log"
 	"github.com/goregion/hexago/pkg/tools"
 )
@@ -32,11 +32,11 @@ func main() {
 		log.NewTextStdOutHandler(),
 	)
 
-	// services to run in parallel
-	tools.RunServicesAsync(ctx, cancel, logger,
-		service_binance_tick_consumer.RunBlocked,
-		service_ohlc_generator.RunBlocked,
-		service_backoffice_api.RunBlocked,
+	// apps to run in parallel
+	tools.RunAppAsync(ctx, cancel, logger,
+		app_binance_tick_consumer.RunBlocked,
+		app_ohlc_generator.RunBlocked,
+		app_backoffice_api.RunBlocked,
 	)
 
 	// wait until context is done

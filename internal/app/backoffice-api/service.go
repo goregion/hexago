@@ -1,26 +1,28 @@
-package service_ohlc_generator
+package app_backoffice_api
 
 import (
 	"context"
 	"time"
 
+	adapter_grpc_api "github.com/goregion/hexago/internal/adapter/grpc-api/impl"
 	adapter_redis "github.com/goregion/hexago/internal/adapter/redis"
-	"github.com/goregion/hexago/internal/app"
+	service_ohlc "github.com/goregion/hexago/internal/service/ohlc"
 	"github.com/goregion/hexago/pkg/log"
 	"github.com/goregion/hexago/pkg/redis"
 	"github.com/goregion/hexago/pkg/tools"
 	"github.com/goregion/must"
+	"github.com/pkg/errors"
+	"golang.org/x/sync/errgroup"
 )
 
 // Config holds the configuration for the service
 type config struct {
 	RedisURL string   `env:"REDIS_URL" required:"true"`
-	MysqlDSN string   `env:"MYSQL_DSN" required:"true"`
 	Symbols  []string `env:"SYMBOLS" required:"true"`
 }
 
 func RunBlocked(ctx context.Context, logger *log.Logger) {
-	logger, logStopService := logger.StartService("ohlc-generator")
+	logger, logStopService := logger.StartService("backoffice-api")
 	defer logStopService()
 
 	// + Load config
@@ -36,39 +38,42 @@ func RunBlocked(ctx context.Context, logger *log.Logger) {
 	)
 	defer redisClose()
 	logger.Info("redis client connected")
-
-	// databaseClient, databaseClose := must.Return2(
-	// 	database.NewClient(ctx, "mysql", serviceConfig.MysqlDSN),
-	// )
-	// defer databaseClose()
-	// logger.Info("database mysql client connected")
 	// - Initialize clients
 
 	var ohlcTimeFrame = 1 * time.Minute
 
 	// + Initialize publishers
-	var ohlcRedisPublisher = adapter_redis.NewOHLCPublisher(redisClient, "m1")
-	//var ohlcDatabasePublisher = adapter_mysql.NewOHLCPublisher(ctx, databaseClient, "m1")
+	var grpcServer = adapter_grpc_api.NewServer(":50051")
 	// - Initialize publishers
 
 	// + Initialize applications
-	var ohlcProcessor = app.NewOHLCCreator(app.USE_BID_PRICE,
-		ohlcRedisPublisher,
-		//ohlcDatabasePublisher,
-	)
+	var ohlcPublisherApp = service_ohlc.NewOHLCPublisher(grpcServer)
 	// - Initialize applications
 
 	// + Initialize consumers
-	var tickRangeConsumer = adapter_redis.NewTickRangeConsumer(redisClient, ohlcProcessor)
+	var ohlcConsumer = adapter_redis.NewOHLCConsumer(redisClient,
+		ohlcPublisherApp,
+		ohlcTimeFrame.String(),
+		serviceConfig.Symbols,
+	)
 	// - Initialize consumers
 
 	// + Consume data
+	var errGroup = errgroup.Group{}
+	errGroup.Go(func() error {
+		return errors.Wrap(
+			ohlcConsumer.RunBlocked(ctx),
+			"ohlc consumer stopped unexpectedly",
+		)
+	})
+	errGroup.Go(func() error {
+		return errors.Wrap(
+			grpcServer.RunBlocked(ctx),
+			"grpc server stopped unexpectedly",
+		)
+	})
 	logger.LogIfError(
-		tickRangeConsumer.RunBlocked(ctx,
-			time.Now(),
-			ohlcTimeFrame,
-			serviceConfig.Symbols,
-		),
+		errGroup.Wait(),
 	)
 	// - Consume data
 }

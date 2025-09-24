@@ -1,18 +1,15 @@
-package service_backoffice_api
+package app_binance_tick_consumer
 
 import (
 	"context"
-	"time"
 
-	adapter_grpc_api "github.com/goregion/hexago/internal/adapter/grpc-api/impl"
+	adapter_binance "github.com/goregion/hexago/internal/adapter/binance"
 	adapter_redis "github.com/goregion/hexago/internal/adapter/redis"
-	"github.com/goregion/hexago/internal/app"
+	service_tick "github.com/goregion/hexago/internal/service/tick"
 	"github.com/goregion/hexago/pkg/log"
 	"github.com/goregion/hexago/pkg/redis"
 	"github.com/goregion/hexago/pkg/tools"
 	"github.com/goregion/must"
-	"github.com/pkg/errors"
-	"golang.org/x/sync/errgroup"
 )
 
 // Config holds the configuration for the service
@@ -22,7 +19,7 @@ type config struct {
 }
 
 func RunBlocked(ctx context.Context, logger *log.Logger) {
-	logger, logStopService := logger.StartService("backoffice-api")
+	logger, logStopService := logger.StartService("binance-tick-consumer")
 	defer logStopService()
 
 	// + Load config
@@ -40,40 +37,25 @@ func RunBlocked(ctx context.Context, logger *log.Logger) {
 	logger.Info("redis client connected")
 	// - Initialize clients
 
-	var ohlcTimeFrame = 1 * time.Minute
-
 	// + Initialize publishers
-	var grpcServer = adapter_grpc_api.NewServer(":50051")
+	var tickPublisher = adapter_redis.NewTickPublisher(redisClient)
 	// - Initialize publishers
 
 	// + Initialize applications
-	var ohlcPublisherApp = app.NewOHLCPublisher(grpcServer)
+	var tickProcessor = service_tick.NewTickProcessor(tickPublisher)
 	// - Initialize applications
 
 	// + Initialize consumers
-	var ohlcConsumer = adapter_redis.NewOHLCConsumer(redisClient,
-		ohlcPublisherApp,
-		ohlcTimeFrame.String(),
-		serviceConfig.Symbols,
+	var binanceListener = adapter_binance.NewLPTickConsumer(serviceConfig.Symbols, tickProcessor,
+		func(err error) {
+			logger.Error("failed to handle tick event", "error", err)
+		},
 	)
 	// - Initialize consumers
 
 	// + Consume data
-	var errGroup = errgroup.Group{}
-	errGroup.Go(func() error {
-		return errors.Wrap(
-			ohlcConsumer.RunBlocked(ctx),
-			"ohlc consumer stopped unexpectedly",
-		)
-	})
-	errGroup.Go(func() error {
-		return errors.Wrap(
-			grpcServer.RunBlocked(ctx),
-			"grpc server stopped unexpectedly",
-		)
-	})
 	logger.LogIfError(
-		errGroup.Wait(),
+		binanceListener.RunBlocked(ctx),
 	)
 	// - Consume data
 }

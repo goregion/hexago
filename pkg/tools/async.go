@@ -2,12 +2,12 @@ package tools
 
 import "context"
 
-func RunAsyncAndWait(ctx context.Context, fn func() error) error {
+func RunAsyncBlocked(ctx context.Context, fn func(ctx context.Context) error) error {
 	var localCtx, cancel = context.WithCancelCause(ctx)
 	defer cancel(nil)
 	go func() {
 		cancel(
-			fn(),
+			fn(localCtx),
 		)
 	}()
 
