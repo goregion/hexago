@@ -7,7 +7,7 @@ import (
 
 	"github.com/goregion/hexago/internal/adapter/grpc-api/gen"
 	"github.com/goregion/hexago/internal/entity"
-	"github.com/goregion/hexago/pkg/tools"
+	"github.com/goregion/hexago/pkg/goture"
 	"github.com/pkg/errors"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
@@ -56,11 +56,11 @@ func (s *Server) RunBlocked(ctx context.Context) error {
 	var grpcServer = grpc.NewServer()
 	gen.RegisterOHLCServiceServer(grpcServer, s)
 
-	err = tools.RunAsyncBlocked(ctx,
+	err = goture.NewGoture(ctx,
 		func(context.Context) error {
 			return grpcServer.Serve(listener)
 		},
-	)
+	).Wait()
 	grpcServer.GracefulStop()
 	if err != nil {
 		return errors.Wrap(err, "grpc server exited with error")

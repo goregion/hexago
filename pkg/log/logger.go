@@ -10,9 +10,7 @@ type Logger struct {
 	*slog.Logger
 }
 
-func NewLogger(
-	handlers ...slog.Handler,
-) *Logger {
+func NewLogger(handlers ...slog.Handler) *Logger {
 	return &Logger{
 		Logger: slog.New(
 			&multiHandler{

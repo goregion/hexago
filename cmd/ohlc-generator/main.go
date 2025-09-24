@@ -4,21 +4,28 @@ import (
 	"context"
 
 	app_ohlc_generator "github.com/goregion/hexago/internal/app/ohlc-generator"
+	"github.com/goregion/hexago/pkg/goture"
+	"github.com/goregion/hexago/pkg/grexit"
 	"github.com/goregion/hexago/pkg/log"
-	"github.com/goregion/hexago/pkg/tools"
 )
 
 func main() {
-	tools.RunApp(
-		// context with graceful exit on SIGINT, SIGTERM
-		tools.MakeGrExitWithContext(
-			context.Background(),
-		),
-		// logger
-		log.NewLogger(
-			log.NewTextStdOutHandler(),
-		),
-		// app to run
-		app_ohlc_generator.RunBlocked,
+	var logger = log.NewLogger(
+		log.NewTextStdOutHandler(),
 	)
+
+	// create context
+	var ctx = context.Background()
+	// inject graceful exit on SIGINT, SIGTERM
+	ctx = grexit.WithGrexitContext(ctx)
+	// inject logger into context
+	ctx = log.WithLoggerContext(ctx, logger)
+
+	// run application and get future
+	var future = goture.NewGoture(ctx, app_ohlc_generator.Launch)
+	// wait for application to finish
+	var err = future.Wait()
+
+	// log error if any
+	logger.LogIfError(err)
 }

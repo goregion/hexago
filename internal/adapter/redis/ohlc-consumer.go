@@ -4,8 +4,8 @@ import (
 	"context"
 
 	"github.com/goregion/hexago/internal/port"
+	"github.com/goregion/hexago/pkg/goter"
 	"github.com/goregion/hexago/pkg/redis"
-	"github.com/goregion/hexago/pkg/tools"
 	"github.com/pkg/errors"
 )
 
@@ -46,7 +46,7 @@ func (h *OHLCConsumer) readNext(ctx context.Context, symbol string) error {
 }
 
 func (h *OHLCConsumer) RunBlocked(ctx context.Context) error {
-	for range tools.Uint64IteratorWithContext(ctx) {
+	for range goter.Uint64IteratorWithContext(ctx) {
 		for _, symbol := range h.symbols {
 			if err := h.readNext(ctx, symbol); err != nil {
 				return errors.Wrap(err, "failed to consume OHLC")

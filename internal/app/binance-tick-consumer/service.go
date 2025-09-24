@@ -6,32 +6,34 @@ import (
 	adapter_binance "github.com/goregion/hexago/internal/adapter/binance"
 	adapter_redis "github.com/goregion/hexago/internal/adapter/redis"
 	service_tick "github.com/goregion/hexago/internal/service/tick"
+	"github.com/goregion/hexago/pkg/config"
 	"github.com/goregion/hexago/pkg/log"
 	"github.com/goregion/hexago/pkg/redis"
-	"github.com/goregion/hexago/pkg/tools"
 	"github.com/goregion/must"
+	"github.com/pkg/errors"
 )
 
-// Config holds the configuration for the service
-type config struct {
+// serviceConfig holds the configuration for the service
+type serviceConfig struct {
 	RedisURL string   `env:"REDIS_URL" required:"true"`
 	Symbols  []string `env:"SYMBOLS" required:"true"`
 }
 
-func RunBlocked(ctx context.Context, logger *log.Logger) {
-	logger, logStopService := logger.StartService("binance-tick-consumer")
+func Launch(ctx context.Context) error {
+	logger, logStopService := log.MustGetLoggerFromContext(ctx).
+		StartService("binance-tick-consumer")
 	defer logStopService()
 
 	// + Load config
-	var serviceConfig = must.Return(
-		tools.ParseEnvConfig[config](),
+	var cfg = must.Return(
+		config.ParseEnv[serviceConfig](),
 	)
-	logger.Info("service config loaded", "config", serviceConfig)
+	logger.Info("service config loaded", "config", cfg)
 	// - Load config
 
 	// + Initialize clients
 	redisClient, redisClose := must.Return2(
-		redis.NewClient(ctx, serviceConfig.RedisURL),
+		redis.NewClient(ctx, cfg.RedisURL),
 	)
 	defer redisClose()
 	logger.Info("redis client connected")
@@ -46,7 +48,7 @@ func RunBlocked(ctx context.Context, logger *log.Logger) {
 	// - Initialize applications
 
 	// + Initialize consumers
-	var binanceListener = adapter_binance.NewLPTickConsumer(serviceConfig.Symbols, tickProcessor,
+	var binanceListener = adapter_binance.NewLPTickConsumer(cfg.Symbols, tickProcessor,
 		func(err error) {
 			logger.Error("failed to handle tick event", "error", err)
 		},
@@ -54,8 +56,10 @@ func RunBlocked(ctx context.Context, logger *log.Logger) {
 	// - Initialize consumers
 
 	// + Consume data
-	logger.LogIfError(
-		binanceListener.RunBlocked(ctx),
-	)
+	if err := binanceListener.RunBlocked(ctx); err != nil {
+		return errors.Wrap(err, "failed to run binance tick consumer")
+	}
 	// - Consume data
+
+	return nil
 }

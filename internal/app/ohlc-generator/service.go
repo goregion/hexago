@@ -6,33 +6,35 @@ import (
 
 	adapter_redis "github.com/goregion/hexago/internal/adapter/redis"
 	service_ohlc "github.com/goregion/hexago/internal/service/ohlc"
+	"github.com/goregion/hexago/pkg/config"
 	"github.com/goregion/hexago/pkg/log"
 	"github.com/goregion/hexago/pkg/redis"
-	"github.com/goregion/hexago/pkg/tools"
 	"github.com/goregion/must"
+	"github.com/pkg/errors"
 )
 
-// Config holds the configuration for the service
-type config struct {
+// serviceConfig holds the configuration for the service
+type serviceConfig struct {
 	RedisURL string   `env:"REDIS_URL" required:"true"`
 	MysqlDSN string   `env:"MYSQL_DSN" required:"true"`
 	Symbols  []string `env:"SYMBOLS" required:"true"`
 }
 
-func RunBlocked(ctx context.Context, logger *log.Logger) {
-	logger, logStopService := logger.StartService("ohlc-generator")
+func Launch(ctx context.Context) error {
+	logger, logStopService := log.MustGetLoggerFromContext(ctx).
+		StartService("ohlc-generator")
 	defer logStopService()
 
 	// + Load config
-	var serviceConfig = must.Return(
-		tools.ParseEnvConfig[config](),
+	var cfg = must.Return(
+		config.ParseEnv[serviceConfig](),
 	)
-	logger.Info("service config loaded", "config", serviceConfig)
+	logger.Info("service config loaded", "config", cfg)
 	// - Load config
 
 	// + Initialize clients
 	redisClient, redisClose := must.Return2(
-		redis.NewClient(ctx, serviceConfig.RedisURL),
+		redis.NewClient(ctx, cfg.RedisURL),
 	)
 	defer redisClose()
 	logger.Info("redis client connected")
@@ -63,12 +65,14 @@ func RunBlocked(ctx context.Context, logger *log.Logger) {
 	// - Initialize consumers
 
 	// + Consume data
-	logger.LogIfError(
-		tickRangeConsumer.RunBlocked(ctx,
-			time.Now(),
-			ohlcTimeFrame,
-			serviceConfig.Symbols,
-		),
-	)
+	if err := tickRangeConsumer.RunBlocked(ctx,
+		time.Now(),
+		ohlcTimeFrame,
+		cfg.Symbols,
+	); err != nil {
+		return errors.Wrap(err, "ohlc generator stopped unexpectedly")
+	}
 	// - Consume data
+
+	return nil
 }

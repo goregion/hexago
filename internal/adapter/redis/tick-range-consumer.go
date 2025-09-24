@@ -6,8 +6,8 @@ import (
 
 	"github.com/goregion/hexago/internal/entity"
 	"github.com/goregion/hexago/internal/port"
+	"github.com/goregion/hexago/pkg/goter"
 	"github.com/goregion/hexago/pkg/redis"
-	"github.com/goregion/hexago/pkg/tools"
 	"github.com/pkg/errors"
 )
 
@@ -51,7 +51,7 @@ func (h *TickRangeConsumer) readNext(ctx context.Context, symbol string, from ti
 }
 
 func (h *TickRangeConsumer) RunBlocked(ctx context.Context, startTime time.Time, timeframe time.Duration, symbols []string) error {
-	for timestamp := range tools.DelayedTimeIteratorWithContext(ctx, startTime, timeframe) {
+	for timestamp := range goter.DelayedTimeIteratorWithContext(ctx, startTime, timeframe) {
 		for _, symbol := range symbols {
 			// Add 1 millisecond to avoid re-reading the last tick of the previous range
 			var fromTime = timestamp.Add(-timeframe)
