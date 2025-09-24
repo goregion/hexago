@@ -65,11 +65,33 @@ This project includes VS Code tasks for:
 
 ### Architecture
 
-This project follows **Hexagonal Architecture** (Ports & Adapters):
-- **Ports** - Interfaces defining contracts
-- **Adapters** - External integrations (Binance, Redis, MySQL, gRPC)  
-- **App** - Business logic and use cases
-- **Entities** - Domain models
+This project follows **Hexagonal Architecture** (Ports & Adapters pattern), also known as the Clean Architecture approach. This architectural pattern allows us to isolate the core business logic from external concerns, making the system more testable, maintainable, and adaptable.
+
+![Hexagonal Architecture Diagram](hexagonal.png)
+
+#### Key Components:
+
+- **Domain Core** - Contains the business logic and domain entities
+  - **Entities** (`internal/entity/`) - Domain models (OHLC, Tick, LP-Tick)
+  - **Services** (`internal/service/`) - Core business logic implementations
+
+- **Ports** (`internal/port/`) - Interfaces defining contracts between the core and external systems
+  - Input ports (driving adapters): API endpoints, consumers
+  - Output ports (driven adapters): databases, external APIs, publishers
+
+- **Adapters** (`internal/adapter/`) - External integrations that implement the ports
+  - **gRPC API** - RESTful API adapter for backoffice operations
+  - **Binance** - Live price tick consumer from Binance WebSocket
+  - **Redis** - Message broker and caching adapter
+  - **MySQL** - Persistent storage adapter
+
+- **Application Services** (`internal/app/`) - Orchestrate business workflows and coordinate between ports
+
+This architecture ensures that:
+- Business logic is independent of external frameworks and databases
+- Easy to test with mock implementations
+- External dependencies can be swapped without affecting the core
+- Clear separation of concerns and single responsibility principle
 
 ## 📊 Coverage Reports
 
