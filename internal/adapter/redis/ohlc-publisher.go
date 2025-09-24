@@ -20,6 +20,7 @@ func NewOHLCPublisher(redisClient *redis.Client, timeframeName string) *OHLCPubl
 	}
 }
 
+// PublishOHLC publishes the given OHLC to the appropriate Redis stream
 func (p *OHLCPublisher) PublishOHLC(ctx context.Context, ohlc *entity.OHLC) error {
 	if err := p.redisClient.XAdd(ctx,
 		&redis.XAddArgs{

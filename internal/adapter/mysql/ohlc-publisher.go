@@ -24,6 +24,7 @@ func NewOHLCPublisher(ctx context.Context, databaseClient *database.Client, time
 	}
 }
 
+// PublishOHLC publishes the given OHLC to the appropriate MySQL table
 func (p *OHLCPublisher) PublishOHLC(ctx context.Context, ohlc *entity.OHLC) error {
 	if _, err := p.insertStmt.ExecContext(ctx, ohlc); err != nil {
 		return err

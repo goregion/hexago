@@ -45,7 +45,8 @@ func (h *OHLCConsumer) readNext(ctx context.Context, symbol string) error {
 	return nil
 }
 
-func (h *OHLCConsumer) RunBlocked(ctx context.Context) error {
+// Launch starts the consumer to read OHLC data for all symbols
+func (h *OHLCConsumer) Launch(ctx context.Context) error {
 	for range goter.Uint64IteratorWithContext(ctx) {
 		for _, symbol := range h.symbols {
 			if err := h.readNext(ctx, symbol); err != nil {

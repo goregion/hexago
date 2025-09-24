@@ -46,7 +46,8 @@ func (c *LPTickConsumer) handleTickEvent(event *binance.WsBookTickerEvent) {
 	}
 }
 
-func (c *LPTickConsumer) RunBlocked(ctx context.Context) error {
+// Launch starts the Binance LP tick consumer to listen for tick events for the configured symbols
+func (c *LPTickConsumer) Launch(ctx context.Context) error {
 	for {
 		doneChan, stopChan, err := binance.WsCombinedBookTickerServe(c.symbols,
 			c.handleTickEvent,

@@ -15,6 +15,7 @@ type prices struct {
 	AskPrice float64
 }
 
+// TickProcessor processes incoming LP ticks and publishes them if there are changes
 type TickProcessor struct {
 	tickPublisher []port.TickPublisher
 
@@ -27,6 +28,7 @@ func NewTickProcessor(tickPublisher ...port.TickPublisher) *TickProcessor {
 	}
 }
 
+// ConsumeLPTick processes an incoming LP tick and publishes it if there are changes
 func (p *TickProcessor) ConsumeLPTick(ctx context.Context, lpTick *entity.LPTick) error {
 	var totalPrices = prices{
 		BidPrice: lpTick.BestBidPrice,

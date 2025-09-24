@@ -61,15 +61,17 @@ func Launch(ctx context.Context) error {
 	// - Initialize applications
 
 	// + Initialize consumers
-	var tickRangeConsumer = adapter_redis.NewTickRangeConsumer(redisClient, ohlcProcessor)
-	// - Initialize consumers
-
-	// + Consume data
-	if err := tickRangeConsumer.RunBlocked(ctx,
+	var tickRangeConsumer = adapter_redis.NewTickRangeConsumer(
+		redisClient,
 		time.Now(),
 		ohlcTimeFrame,
 		cfg.Symbols,
-	); err != nil {
+		ohlcProcessor,
+	)
+	// - Initialize consumers
+
+	// + Consume data
+	if err := tickRangeConsumer.Launch(ctx); err != nil {
 		return errors.Wrap(err, "ohlc generator stopped unexpectedly")
 	}
 	// - Consume data

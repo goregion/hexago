@@ -26,6 +26,7 @@ func NewServer(addr string) *Server {
 	}
 }
 
+// PublishOHLC publishes the given OHLC to all subscribed clients
 func (s *Server) PublishOHLC(ctx context.Context, ohlc *entity.OHLC) error {
 	s.ohlcSessions.Range(func(key, value any) bool {
 		symbol := key.(string)
@@ -40,6 +41,7 @@ func (s *Server) PublishOHLC(ctx context.Context, ohlc *entity.OHLC) error {
 	return nil
 }
 
+// SubscribeToOHLCStream allows clients to subscribe to a stream of OHLC updates for a specific symbol
 func (s *Server) SubscribeToOHLCStream(request *gen.SubscribeToOHLCStreamRequest, stream grpc.ServerStreamingServer[gen.OHLC]) error {
 	s.ohlcSessions.Store(request.Symbol, stream)
 	defer s.ohlcSessions.Delete(request.Symbol)
@@ -48,7 +50,8 @@ func (s *Server) SubscribeToOHLCStream(request *gen.SubscribeToOHLCStreamRequest
 	return status.Errorf(codes.Canceled, "client canceled, abandoning")
 }
 
-func (s *Server) RunBlocked(ctx context.Context) error {
+// Launch starts the gRPC server and listens for incoming connections
+func (s *Server) Launch(ctx context.Context) error {
 	listener, err := net.Listen("tcp", s.addr)
 	if err != nil {
 		return errors.Wrap(err, "failed to listen")

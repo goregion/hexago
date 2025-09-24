@@ -13,16 +13,29 @@ import (
 
 type TickRangeConsumer struct {
 	redisClient *redis.Client
+	startTime   time.Time
+	timeframe   time.Duration
+	symbols     []string
 	consumer    port.TickRangeConsumer
 }
 
-func NewTickRangeConsumer(redisClient *redis.Client, consumer port.TickRangeConsumer) *TickRangeConsumer {
+func NewTickRangeConsumer(
+	redisClient *redis.Client,
+	startTime time.Time,
+	timeframe time.Duration,
+	symbols []string,
+	consumer port.TickRangeConsumer,
+) *TickRangeConsumer {
 	return &TickRangeConsumer{
 		redisClient: redisClient,
+		startTime:   startTime,
+		timeframe:   timeframe,
+		symbols:     symbols,
 		consumer:    consumer,
 	}
 }
 
+// readNext reads the next range of ticks for a given symbol from Redis and passes them to the consumer
 func (h *TickRangeConsumer) readNext(ctx context.Context, symbol string, from time.Time, to time.Time) error {
 	slice, err := h.redisClient.XRange(ctx,
 		makeTickStreamKey(symbol),
@@ -50,11 +63,12 @@ func (h *TickRangeConsumer) readNext(ctx context.Context, symbol string, from ti
 	)
 }
 
-func (h *TickRangeConsumer) RunBlocked(ctx context.Context, startTime time.Time, timeframe time.Duration, symbols []string) error {
-	for timestamp := range goter.DelayedTimeIteratorWithContext(ctx, startTime, timeframe) {
-		for _, symbol := range symbols {
+// Launch starts the consumer to read tick ranges for all symbols at intervals defined by the timeframe
+func (h *TickRangeConsumer) Launch(ctx context.Context) error {
+	for timestamp := range goter.DelayedTimeIteratorWithContext(ctx, h.startTime, h.timeframe) {
+		for _, symbol := range h.symbols {
 			// Add 1 millisecond to avoid re-reading the last tick of the previous range
-			var fromTime = timestamp.Add(-timeframe)
+			var fromTime = timestamp.Add(-h.timeframe)
 			var toTime = timestamp.Add(-time.Millisecond)
 			if err := h.readNext(ctx, symbol, fromTime, toTime); err != nil {
 				return errors.Wrap(err, "failed to consume tick range")

@@ -13,6 +13,7 @@ const (
 	USE_ASK_PRICE
 )
 
+// OHLC creator from ticks
 type OHLCCreator struct {
 	ohlcPublisher    []port.OHLCPublisher
 	useBidOrAskPrice int
@@ -25,6 +26,7 @@ func NewOHLCCreator(useBidOrAskPrice int, ohlcPublisher ...port.OHLCPublisher) *
 	}
 }
 
+// ConsumeTickRange processes a range of ticks to create an OHLC and publishes it
 func (p *OHLCCreator) ConsumeTickRange(ctx context.Context, ticks *entity.TickRange) error {
 	var ohlc = &entity.OHLC{
 		Symbol:      ticks.Symbol,

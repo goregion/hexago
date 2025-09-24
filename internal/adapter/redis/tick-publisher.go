@@ -18,6 +18,7 @@ func NewTickPublisher(redisClient *redis.Client) *TickPublisher {
 	}
 }
 
+// PublishTick publishes the given tick to the appropriate Redis stream
 func (p *TickPublisher) PublishTick(ctx context.Context, tick *entity.Tick) error {
 	if err := p.redisClient.XAdd(ctx,
 		&redis.XAddArgs{

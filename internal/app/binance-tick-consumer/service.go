@@ -56,7 +56,7 @@ func Launch(ctx context.Context) error {
 	// - Initialize consumers
 
 	// + Consume data
-	if err := binanceListener.RunBlocked(ctx); err != nil {
+	if err := binanceListener.Launch(ctx); err != nil {
 		return errors.Wrap(err, "failed to run binance tick consumer")
 	}
 	// - Consume data

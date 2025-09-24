@@ -48,7 +48,7 @@ func (ts *TestServer) Start(t *testing.T) {
 
 	// Start server in goroutine
 	go func() {
-		if err := ts.server.RunBlocked(ctx); err != nil && ctx.Err() == nil {
+		if err := ts.server.Launch(ctx); err != nil && ctx.Err() == nil {
 			t.Errorf("Server failed: %v", err)
 		}
 	}()

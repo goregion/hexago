@@ -8,11 +8,10 @@ import (
 	adapter_redis "github.com/goregion/hexago/internal/adapter/redis"
 	service_ohlc "github.com/goregion/hexago/internal/service/ohlc"
 	"github.com/goregion/hexago/pkg/config"
+	"github.com/goregion/hexago/pkg/goture"
 	"github.com/goregion/hexago/pkg/log"
 	"github.com/goregion/hexago/pkg/redis"
 	"github.com/goregion/must"
-	"github.com/pkg/errors"
-	"golang.org/x/sync/errgroup"
 )
 
 // serviceConfig holds the configuration for the service
@@ -60,21 +59,11 @@ func Launch(ctx context.Context) error {
 	// - Initialize consumers
 
 	// + Consume data
-	var errGroup = errgroup.Group{}
-	errGroup.Go(func() error {
-		return errors.Wrap(
-			ohlcConsumer.RunBlocked(ctx),
-			"ohlc consumer stopped unexpectedly",
-		)
-	})
-	errGroup.Go(func() error {
-		return errors.Wrap(
-			grpcServer.RunBlocked(ctx),
-			"grpc server stopped unexpectedly",
-		)
-	})
 	logger.LogIfError(
-		errGroup.Wait(),
+		goture.NewParallelGoture(ctx,
+			ohlcConsumer.Launch,
+			grpcServer.Launch,
+		).Wait(),
 	)
 	// - Consume data
 

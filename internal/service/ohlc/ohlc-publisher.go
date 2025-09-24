@@ -8,6 +8,7 @@ import (
 	"github.com/pkg/errors"
 )
 
+// OHLC publisher service
 type OHLCPublisher struct {
 	ohlcPublisher    []port.OHLCPublisher
 	useBidOrAskPrice int
@@ -19,6 +20,7 @@ func NewOHLCPublisher(ohlcPublisher ...port.OHLCPublisher) *OHLCPublisher {
 	}
 }
 
+// ConsumeOHLC publishes the given OHLC data using all configured publishers
 func (p *OHLCPublisher) ConsumeOHLC(ctx context.Context, ohlc *entity.OHLC) error {
 	for _, p := range p.ohlcPublisher {
 		if err := p.PublishOHLC(ctx, ohlc); err != nil {
