@@ -3,8 +3,8 @@ package launcher
 import (
 	"context"
 
-	"github.com/goregion/hexago/pkg/goture"
-	"github.com/goregion/hexago/pkg/grexit"
+	"github.com/goregion/goture"
+	"github.com/goregion/grexit"
 	"github.com/goregion/hexago/pkg/log"
 )
 

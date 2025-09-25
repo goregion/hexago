@@ -4,9 +4,9 @@ import (
 	"context"
 	"time"
 
+	"github.com/goregion/goter"
 	"github.com/goregion/hexago/internal/entity"
 	"github.com/goregion/hexago/internal/port"
-	"github.com/goregion/hexago/pkg/goter"
 	"github.com/goregion/hexago/pkg/redis"
 	"github.com/pkg/errors"
 )
@@ -65,7 +65,7 @@ func (h *TickRangeConsumer) readNext(ctx context.Context, symbol string, from ti
 
 // Launch starts the consumer to read tick ranges for all symbols at intervals defined by the timeframe
 func (h *TickRangeConsumer) Launch(ctx context.Context) error {
-	for timestamp := range goter.DelayedTimeIteratorWithContext(ctx, h.startTime, h.timeframe) {
+	for timestamp := range goter.Ticker(ctx, h.startTime, h.timeframe) {
 		for _, symbol := range h.symbols {
 			// Add 1 millisecond to avoid re-reading the last tick of the previous range
 			var fromTime = timestamp.Add(-h.timeframe)

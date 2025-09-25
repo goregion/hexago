@@ -3,9 +3,9 @@ package main
 import (
 	"context"
 
+	"github.com/goregion/goture"
+	"github.com/goregion/grexit"
 	app_ohlc_generator "github.com/goregion/hexago/internal/app/ohlc-generator"
-	"github.com/goregion/hexago/pkg/goture"
-	"github.com/goregion/hexago/pkg/grexit"
 	"github.com/goregion/hexago/pkg/log"
 )
 

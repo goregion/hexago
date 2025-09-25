@@ -4,11 +4,11 @@ import (
 	"context"
 	"time"
 
+	"github.com/goregion/goture"
 	adapter_grpc_api "github.com/goregion/hexago/internal/adapter/grpc-api/impl"
 	adapter_redis "github.com/goregion/hexago/internal/adapter/redis"
 	service_ohlc "github.com/goregion/hexago/internal/service/ohlc"
 	"github.com/goregion/hexago/pkg/config"
-	"github.com/goregion/hexago/pkg/goture"
 	"github.com/goregion/hexago/pkg/log"
 	"github.com/goregion/hexago/pkg/redis"
 	"github.com/goregion/must"

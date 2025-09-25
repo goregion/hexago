@@ -5,9 +5,9 @@ import (
 	"net"
 	"sync"
 
+	"github.com/goregion/goture"
 	"github.com/goregion/hexago/internal/adapter/grpc-api/gen"
 	"github.com/goregion/hexago/internal/entity"
-	"github.com/goregion/hexago/pkg/goture"
 	"github.com/pkg/errors"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"

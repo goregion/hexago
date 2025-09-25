@@ -3,9 +3,9 @@ package main
 import (
 	"context"
 
+	"github.com/goregion/goture"
+	"github.com/goregion/grexit"
 	app_backoffice_api "github.com/goregion/hexago/internal/app/backoffice-api"
-	"github.com/goregion/hexago/pkg/goture"
-	"github.com/goregion/hexago/pkg/grexit"
 	"github.com/goregion/hexago/pkg/log"
 )
 

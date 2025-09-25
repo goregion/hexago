@@ -3,8 +3,8 @@ package adapter_redis
 import (
 	"context"
 
+	"github.com/goregion/goter"
 	"github.com/goregion/hexago/internal/port"
-	"github.com/goregion/hexago/pkg/goter"
 	"github.com/goregion/hexago/pkg/redis"
 	"github.com/pkg/errors"
 )
@@ -47,7 +47,7 @@ func (h *OHLCConsumer) readNext(ctx context.Context, symbol string) error {
 
 // Launch starts the consumer to read OHLC data for all symbols
 func (h *OHLCConsumer) Launch(ctx context.Context) error {
-	for range goter.Uint64IteratorWithContext(ctx) {
+	for range goter.Numbers[uint64](ctx) {
 		for _, symbol := range h.symbols {
 			if err := h.readNext(ctx, symbol); err != nil {
 				return errors.Wrap(err, "failed to consume OHLC")
