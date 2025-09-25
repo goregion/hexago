@@ -1,100 +1,88 @@
+// Package goture provides a Future pattern implementation for Go.
+// It allows executing tasks asynchronously and waiting for their completion.
 package goture
 
 import (
 	"context"
-
-	"github.com/pkg/errors"
 )
 
-type TaskWithResult[ResultType any] func(ctx context.Context) (ResultType, error)
+// SuccessResult represents successful completion of a task
+type SuccessResult struct{}
+
+func (s SuccessResult) Error() string {
+	return ""
+}
+
+// Task represents a function that can be executed asynchronously
 type Task func(ctx context.Context) error
 
-type result[ResultType any] struct {
-	value ResultType
-	err   error
-}
-
-func makeResult[ResultType any](value ResultType, err error) result[ResultType] {
-	return result[ResultType]{value: value, err: err}
-}
-
-func (r result[ResultType]) Error() string {
-	if r.err == nil {
-		return ""
-	}
-	return r.err.Error()
-}
-
-type GotureWithResult[ResultType any] struct {
-	ctx context.Context
-}
-
-func (f GotureWithResult[ResultType]) Wait() (ResultType, error) {
-	<-f.ctx.Done()
-	if f.ctx.Err() != nil {
-		var res = f.ctx.Err().(result[ResultType])
-		return res.value, res.err
-	}
-	var zero ResultType
-	return zero, nil
-}
-
+// Goture represents a future that will complete when the associated task finishes
 type Goture struct {
 	ctx context.Context
 }
 
+// Wait blocks until the task completes and returns any error that occurred
 func (f Goture) Wait() error {
 	<-f.ctx.Done()
-	return f.ctx.Err()
-}
-
-func recoverCancel(cancel context.CancelCauseFunc) {
-	if r := recover(); r != nil {
-		if err, ok := r.(error); ok {
-			cancel(err)
-			return
-		}
-		cancel(errors.Errorf("%v", r))
+	cause := context.Cause(f.ctx)
+	if _, ok := cause.(SuccessResult); ok {
+		return nil
 	}
+	return cause
 }
 
-func NewGotureWithResult[ResultType any](ctx context.Context, fn TaskWithResult[ResultType]) GotureWithResult[ResultType] {
-	var localCtx, cancel = context.WithCancelCause(ctx)
-	go func() {
-		defer recoverCancel(cancel)
-		cancel(
-			makeResult(
-				fn(localCtx),
-			),
-		)
-	}()
-	return GotureWithResult[ResultType]{ctx: localCtx}
-}
-
+// NewGoture creates a new Goture that executes the given task asynchronously.
+// The task will start executing immediately in a separate goroutine.
 func NewGoture(ctx context.Context, fn Task) Goture {
 	var localCtx, cancel = context.WithCancelCause(ctx)
 	go func() {
 		defer recoverCancel(cancel)
-		cancel(
-			fn(localCtx),
-		)
+		if err := fn(localCtx); err != nil {
+			cancel(err)
+		} else {
+			cancel(SuccessResult{})
+		}
 	}()
 	return Goture{ctx: localCtx}
 }
 
+// NewParallelGoture creates a new Goture that executes all given tasks in parallel.
+// It waits for all tasks to complete and returns an error if any task fails.
+// If multiple tasks fail, it returns the first error encountered.
 func NewParallelGoture(parentCtx context.Context, tasks ...Task) Goture {
 	if len(tasks) == 0 {
-		return Goture{ctx: parentCtx}
+		// Return completed future for empty task list
+		localCtx, cancel := context.WithCancelCause(parentCtx)
+		cancel(SuccessResult{})
+		return Goture{ctx: localCtx}
 	}
 
 	var localCtx, cancel = context.WithCancelCause(parentCtx)
+
+	// Use sync mechanism to wait for all tasks
+	completed := make(chan error, len(tasks))
+
 	for _, fn := range tasks {
 		go func(task Task) {
-			defer recoverCancel(cancel)
-			cancel(
-				task(localCtx),
-			)
+			defer recoverCancelForParallel(completed)
+			completed <- task(localCtx)
 		}(fn)
 	}
+
+	// Goroutine to wait for all tasks completion
+	go func() {
+		var firstError error
+		for i := 0; i < len(tasks); i++ {
+			if err := <-completed; err != nil && firstError == nil {
+				firstError = err
+			}
+		}
+		if firstError != nil {
+			cancel(firstError)
+		} else {
+			cancel(SuccessResult{})
+		}
+	}()
+
 	return Goture{ctx: localCtx}
 }

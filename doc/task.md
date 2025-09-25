@@ -13,6 +13,11 @@ The service performs the following key functions:
 3. **📡 Real-time Broadcasting** - Streams current bar data via API
 4. **💾 Data Persistence** - Stores completed bars in database
 
+## 🏗️ System Architecture
+
+The following diagram illustrates the overall system architecture and data flow:
+
+![System Architecture](arch.jpg)
 
 ---
 
