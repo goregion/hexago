@@ -4,6 +4,7 @@
 package log
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"os"
@@ -23,10 +24,14 @@ func ExampleLogger_basic() {
 // ExampleLogger_multipleHandlers shows how to configure a logger
 // that outputs to multiple destinations simultaneously.
 func ExampleLogger_multipleHandlers() {
+	// Create custom stderr handler using existing functions
+	var stderrBuf bytes.Buffer
+	stderrHandler := NewTextHandler(&stderrBuf) // This simulates stderr
+
 	// Logger with multiple handlers
 	logger := NewLogger(
 		NewJsonStdOutHandler(),
-		NewTextStdErrHandler(),
+		stderrHandler,
 	)
 
 	logger.Warn("This will appear in both stdout (JSON) and stderr (text)")

@@ -2,6 +2,7 @@ package database
 
 import (
 	"context"
+	"time"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -20,9 +21,18 @@ func NewClient(ctx context.Context, driverName string, dataSourceName string) (*
 	client := &Client{
 		DB: db,
 	}
+
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	if err := client.PingContext(ctx); err != nil {
+		db.Close()
+		return nil, func() {}, err
+	}
+
 	return client,
 		func() {
 			db.Close()
 		},
-		client.PingContext(ctx)
+		nil
 }

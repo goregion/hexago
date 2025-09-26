@@ -2,6 +2,7 @@ package redis
 
 import (
 	"context"
+	"time"
 
 	"github.com/redis/go-redis/v9"
 )
@@ -23,9 +24,17 @@ func NewClient(ctx context.Context, redisURL string) (*Client, func(), error) {
 		Client: redis.NewClient(opt),
 	}
 
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	if err := client.Ping(ctx).Err(); err != nil {
+		client.Close()
+		return nil, func() {}, err
+	}
+
 	return client,
 		func() {
 			client.Close()
 		},
-		client.Ping(ctx).Err()
+		nil
 }

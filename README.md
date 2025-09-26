@@ -108,3 +108,8 @@ Test coverage reports are generated in GitHub Actions and can be viewed on [Code
 - Unit tests run on every push
 - Integration tests run after unit tests pass
 - Coverage reports uploaded to Codecov
+
+## Todo checklist:
+- [ ] Add migration scripts for database setup
+- [ ] Add metrics and tracing
+- [ ] Optimize performance for high-load scenarios

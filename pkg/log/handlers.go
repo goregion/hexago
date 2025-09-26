@@ -38,19 +38,6 @@ func NewJsonStdOutHandler() slog.Handler {
 	return slog.NewJSONHandler(os.Stdout, makeOptions())
 }
 
-// NewTextStdErrHandler creates a text-formatted handler that writes to stderr.
-// This is useful for error logging or when you want to separate regular logs
-// from error logs at the output level.
-func NewTextStdErrHandler() slog.Handler {
-	return slog.NewTextHandler(os.Stderr, makeOptions())
-}
-
-// NewJsonStdErrHandler creates a JSON-formatted handler that writes to stderr.
-// Combines the benefits of structured JSON logging with stderr output separation.
-func NewJsonStdErrHandler() slog.Handler {
-	return slog.NewJSONHandler(os.Stderr, makeOptions())
-}
-
 // NewTextHandler creates a text-formatted handler that writes to the specified writer.
 // This provides flexibility to log to any destination that implements io.Writer,
 // such as files, buffers, or custom writers.
@@ -72,22 +59,4 @@ func NewTextHandler(writer io.Writer) slog.Handler {
 //	handler := NewJsonHandler(file)
 func NewJsonHandler(writer io.Writer) slog.Handler {
 	return slog.NewJSONHandler(writer, makeOptions())
-}
-
-// NewHandlerWithLevel creates a handler with custom log level configuration.
-// This allows fine-grained control over logging levels, bypassing the environment-based configuration.
-//
-// Parameters:
-//   - handler: A function that creates slog.Handler (e.g., slog.NewJSONHandler)
-//   - writer: The io.Writer to write logs to
-//   - level: The minimum log level to handle
-//
-// Example:
-//
-//	handler := NewHandlerWithLevel(slog.NewJSONHandler, os.Stdout, slog.LevelError)
-func NewHandlerWithLevel(handler func(io.Writer, *slog.HandlerOptions) slog.Handler, writer io.Writer, level slog.Level) slog.Handler {
-	options := &slog.HandlerOptions{
-		Level: level,
-	}
-	return handler(writer, options)
 }

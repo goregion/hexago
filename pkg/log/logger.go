@@ -72,18 +72,19 @@ func (l *Logger) LogIfError(err error, messages ...any) {
 	}
 }
 
-// WithFields creates a new logger instance with pre-configured fields.
-// This is useful when you want to include common context throughout
-// multiple log messages, such as user ID, request ID, etc.
+// WithFields creates a new Logger with pre-configured structured fields.
+// This is useful for creating contextual loggers that automatically include
+// common fields like user_id, request_id, etc. in all log messages.
 //
 // Example:
 //
 //	userLogger := logger.WithFields(map[string]any{
-//	    "user_id": 12345,
-//	    "tenant_id": "abc",
+//		"user_id": 12345,
+//		"tenant_id": "tenant-abc",
 //	})
+//	userLogger.Info("User performed action", "action", "login")
 func (l *Logger) WithFields(fields map[string]any) *Logger {
-	var args []any
+	args := make([]any, 0, len(fields)*2)
 	for k, v := range fields {
 		args = append(args, k, v)
 	}
@@ -92,28 +93,18 @@ func (l *Logger) WithFields(fields map[string]any) *Logger {
 	}
 }
 
-// WithError creates a new logger instance with a pre-configured error field.
-// This is convenient when you need to log multiple messages related to the same error.
+// WithError creates a new Logger with a pre-configured error field.
+// This is useful when you need to log multiple messages related to the same error.
 //
 // Example:
 //
-//	errorLogger := logger.WithError(dbError)
+//	errorLogger := logger.WithError(dbErr)
 //	errorLogger.Error("Failed to save user")
-//	errorLogger.Warn("Attempting retry")
+//	errorLogger.Warn("Falling back to cache")
 func (l *Logger) WithError(err error) *Logger {
 	return &Logger{
 		Logger: l.Logger.With("error", err),
 	}
-}
-
-// LogWithLevel logs a message with the specified log level.
-// This provides direct access to slog's Log method with custom levels.
-//
-// Example:
-//
-//	logger.LogWithLevel(slog.LevelWarn, "Custom warning", "details", value)
-func (l *Logger) LogWithLevel(level slog.Level, msg string, args ...any) {
-	l.Logger.Log(context.Background(), level, msg, args...)
 }
 
 // formatMessage formats the error and additional messages into a log message and arguments.
