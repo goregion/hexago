@@ -4,11 +4,13 @@ import (
 	"context"
 	"time"
 
+	adapter_mysql "github.com/goregion/hexago/internal/adapter/mysql"
 	adapter_redis "github.com/goregion/hexago/internal/adapter/redis"
 	service_ohlc "github.com/goregion/hexago/internal/service/ohlc"
 	"github.com/goregion/hexago/pkg/config"
 	"github.com/goregion/hexago/pkg/log"
 	"github.com/goregion/hexago/pkg/redis"
+	sqlgen_db "github.com/goregion/hexago/pkg/sqlgen-db"
 	"github.com/goregion/must"
 	"github.com/pkg/errors"
 )
@@ -39,24 +41,25 @@ func Launch(ctx context.Context) error {
 	defer redisClose()
 	logger.Info("redis client connected")
 
-	// databaseClient, databaseClose := must.Return2(
-	// 	database.NewClient(ctx, "mysql", serviceConfig.MysqlDSN),
-	// )
-	// defer databaseClose()
-	// logger.Info("database mysql client connected")
+	databaseClient, databaseClose := must.Return2(
+		sqlgen_db.NewClient(ctx, "mysql", cfg.MysqlDSN),
+	)
+	defer databaseClose()
+	logger.Info("database mysql client connected")
 	// - Initialize clients
 
 	var ohlcTimeFrame = 1 * time.Minute
 
 	// + Initialize publishers
 	var ohlcRedisPublisher = adapter_redis.NewOHLCPublisher(redisClient, "m1")
-	//var ohlcDatabasePublisher = adapter_mysql.NewOHLCPublisher(ctx, databaseClient, "m1")
+	var ohlcDBRepository = adapter_mysql.NewOHLCRepository(databaseClient, "m1")
 	// - Initialize publishers
 
 	// + Initialize applications
 	var ohlcProcessor = service_ohlc.NewOHLCCreator(service_ohlc.USE_BID_PRICE,
 		ohlcRedisPublisher,
-		//ohlcDatabasePublisher,
+		databaseClient,
+		ohlcDBRepository,
 	)
 	// - Initialize applications
 

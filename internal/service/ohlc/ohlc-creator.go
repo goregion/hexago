@@ -15,14 +15,18 @@ const (
 
 // OHLC creator from ticks
 type OHLCCreator struct {
-	ohlcPublisher    []port.OHLCPublisher
-	useBidOrAskPrice int
+	ohlcPublisher                port.OHLCPublisher
+	ohlcRepository               port.OHLCRepository
+	repositoryTransactionManager port.TransactionManager
+	useBidOrAskPrice             int
 }
 
-func NewOHLCCreator(useBidOrAskPrice int, ohlcPublisher ...port.OHLCPublisher) *OHLCCreator {
+func NewOHLCCreator(useBidOrAskPrice int, ohlcPublisher port.OHLCPublisher, repositoryTransactionManager port.TransactionManager, ohlcRepository port.OHLCRepository) *OHLCCreator {
 	return &OHLCCreator{
-		ohlcPublisher:    ohlcPublisher,
-		useBidOrAskPrice: useBidOrAskPrice,
+		ohlcPublisher:                ohlcPublisher,
+		ohlcRepository:               ohlcRepository,
+		repositoryTransactionManager: repositoryTransactionManager,
+		useBidOrAskPrice:             useBidOrAskPrice,
 	}
 }
 
@@ -51,10 +55,20 @@ func (p *OHLCCreator) ConsumeTickRange(ctx context.Context, ticks *entity.TickRa
 		}
 	}
 
-	for _, p := range p.ohlcPublisher {
-		if err := p.PublishOHLC(ctx, ohlc); err != nil {
-			return errors.Wrap(err, "failed to publish OHLC")
-		}
+	if err := p.ohlcPublisher.PublishOHLC(ctx, ohlc); err != nil {
+		return errors.Wrap(err, "failed to publish OHLC")
 	}
+
+	transactionCtx, commit, rollback, err := p.repositoryTransactionManager.WithTx(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to create transaction")
+	}
+	defer rollback()
+
+	if err := p.ohlcRepository.StoreOHLC(transactionCtx, ohlc); err != nil {
+		return errors.Wrap(err, "failed to store OHLC")
+	}
+
+	commit()
 	return nil
 }

@@ -10,11 +10,10 @@ import (
 
 // OHLC publisher service
 type OHLCPublisher struct {
-	ohlcPublisher    []port.OHLCPublisher
-	useBidOrAskPrice int
+	ohlcPublisher port.OHLCPublisher
 }
 
-func NewOHLCPublisher(ohlcPublisher ...port.OHLCPublisher) *OHLCPublisher {
+func NewOHLCPublisher(ohlcPublisher port.OHLCPublisher) *OHLCPublisher {
 	return &OHLCPublisher{
 		ohlcPublisher: ohlcPublisher,
 	}
@@ -22,10 +21,8 @@ func NewOHLCPublisher(ohlcPublisher ...port.OHLCPublisher) *OHLCPublisher {
 
 // ConsumeOHLC publishes the given OHLC data using all configured publishers
 func (p *OHLCPublisher) ConsumeOHLC(ctx context.Context, ohlc *entity.OHLC) error {
-	for _, p := range p.ohlcPublisher {
-		if err := p.PublishOHLC(ctx, ohlc); err != nil {
-			return errors.Wrap(err, "failed to publish OHLC")
-		}
+	if err := p.ohlcPublisher.PublishOHLC(ctx, ohlc); err != nil {
+		return errors.Wrap(err, "failed to publish OHLC")
 	}
 	return nil
 }
