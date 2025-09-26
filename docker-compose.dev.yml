@@ -1,0 +1,193 @@
+# Docker Compose Configuration for Development
+
+services:
+  # MySQL Database
+  mysql:
+    image: mysql:8.0
+    container_name: hexago-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: hexago_dev
+      MYSQL_USER: hexago_user
+      MYSQL_PASSWORD: hexago_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./scripts/sql:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+    networks:
+      - hexago-network
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: hexago-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - hexago-network
+
+  # Test Database (for integration tests)
+  mysql-test:
+    image: mysql:8.0
+    container_name: hexago-mysql-test
+    environment:
+      MYSQL_ROOT_PASSWORD: testpassword
+      MYSQL_DATABASE: hexago_test
+      MYSQL_USER: test_user
+      MYSQL_PASSWORD: test_password
+    ports:
+      - "3307:3306"
+    volumes:
+      - ./scripts/sql:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+    networks:
+      - hexago-network
+    profiles:
+      - testing
+
+  # Redis for testing
+  redis-test:
+    image: redis:7-alpine
+    container_name: hexago-redis-test
+    ports:
+      - "6380:6379"
+    networks:
+      - hexago-network
+    profiles:
+      - testing
+
+  # Binance Tick Consumer
+  binance-tick-consumer:
+    build:
+      context: .
+      dockerfile: docker/binance-tick-consumer.Dockerfile
+    container_name: hexago-binance-consumer
+    environment:
+      - DATABASE_URL=mysql://hexago_user:hexago_password@mysql:3306/hexago_dev
+      - REDIS_URL=redis://redis:6379
+      - LOG_LEVEL=info
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - hexago-network
+    profiles:
+      - services
+
+  # OHLC Generator
+  ohlc-generator:
+    build:
+      context: .
+      dockerfile: docker/ohlc-generator.Dockerfile
+    container_name: hexago-ohlc-generator
+    environment:
+      - DATABASE_URL=mysql://hexago_user:hexago_password@mysql:3306/hexago_dev
+      - REDIS_URL=redis://redis:6379
+      - LOG_LEVEL=info
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - hexago-network
+    profiles:
+      - services
+
+  # Backoffice API
+  backoffice-api:
+    build:
+      context: .
+      dockerfile: docker/backoffice-api.Dockerfile
+    container_name: hexago-backoffice-api
+    environment:
+      - DATABASE_URL=mysql://hexago_user:hexago_password@mysql:3306/hexago_dev
+      - REDIS_URL=redis://redis:6379
+      - GRPC_PORT=8080
+      - LOG_LEVEL=info
+    ports:
+      - "8080:8080"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - hexago-network
+    profiles:
+      - services
+
+  # All-in-One Service (for development)
+  all-in-one:
+    build:
+      context: .
+      dockerfile: docker/all-in-one.Dockerfile
+    container_name: hexago-all-in-one
+    environment:
+      - DATABASE_URL=mysql://hexago_user:hexago_password@mysql:3306/hexago_dev
+      - REDIS_URL=redis://redis:6379
+      - GRPC_PORT=8080
+      - LOG_LEVEL=debug
+    ports:
+      - "8080:8080"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - hexago-network
+    profiles:
+      - development
+
+  # Development tools
+  adminer:
+    image: adminer
+    container_name: hexago-adminer
+    ports:
+      - "8081:8080"
+    environment:
+      ADMINER_DEFAULT_SERVER: mysql
+    networks:
+      - hexago-network
+    profiles:
+      - development
+
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: hexago-redis-commander
+    ports:
+      - "8082:8081"
+    environment:
+      REDIS_HOSTS: local:redis:6379
+    networks:
+      - hexago-network
+    profiles:
+      - development
+
+volumes:
+  mysql_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  hexago-network:
+    driver: bridge

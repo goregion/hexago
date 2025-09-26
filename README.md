@@ -1,8 +1,36 @@
-# Hexago
+# Hexago - Hexagonal Architecture Go Template
 
-Go-based cryptocurrency trading system with gRPC API, using hexagonal architecture.
+🏗️ **Production-ready Go template** implementing **Hexagonal Architecture** (Ports & Adapters pattern)
+
+This project serves as both a working cryptocurrency trading system and a **template for creating new Go applications** following clean architecture principles.
+
+## 🎯 Template Features
+
+- ✅ **Complete Hexagonal Architecture** implementation
+- ✅ **Code generators** for adapters and services  
+- ✅ **Comprehensive testing** strategy (unit + integration)
+- ✅ **Docker & Docker Compose** support
+- ✅ **VS Code integration** with tasks and settings
+- ✅ **Automated workflows** with Makefiles and scripts
+- ✅ **Production-ready logging** and error handling
+- ✅ **gRPC API** with Protocol Buffers
+- ✅ **Documentation** and best practices
 
 ## 🚀 Quick Start
+
+### As a Template
+
+```bash
+# Create new project from template (cross-platform)
+go run ./scripts/template-init
+
+# Or manually clone and customize
+git clone https://github.com/goregion/hexago my-project
+cd my-project
+# Update module paths and customize
+```
+
+### As Working Example
 
 ### Prerequisites
 - Go 1.21+ 
@@ -12,33 +40,82 @@ Go-based cryptocurrency trading system with gRPC API, using hexagonal architectu
 ### Development Commands
 
 ```bash
-# Install dependencies
-go mod download
+# Setup development environment (installs tools and dependencies)
+make setup-dev
 
-# Generate gRPC code (use VS Code task or manual command)
-protoc --go_out=. --go-grpc_out=. api/backoffice/grpc/ohlc.proto
+# Install dependencies
+make install
+
+# Generate code (protobuf, mocks, etc.)
+make generate
 
 # Run unit tests
-go test ./tests/unit/...
+make test-unit
 
 # Run integration tests  
-go test ./tests/integration/...
+make test-integration
 
 # Run all tests
-go test ./tests/...
+make test
 
 # Run tests with race detection
-go test -race ./tests/...
+make test-race
 
 # Run tests with coverage
-go test -coverprofile=coverage.out ./tests/...
-go tool cover -html=coverage.out -o coverage.html
+make test-coverage
+
+# Format code
+make fmt
+
+# Run linter
+make lint
+
+# Build applications
+make build
+
+# Clean artifacts
+make clean
 ```
+
+## 🎨 Template Usage
+
+### Generate New Components
+
+```bash
+# Create new adapter
+make template-create-adapter
+# Follow prompts to generate boilerplate
+
+# Create new service
+make template-create-service  
+# Follow prompts to generate boilerplate
+```
+
+### Available Tools
+
+- **`scripts/template-init/`** - Initialize new project from template (Go-based, cross-platform)
+- **`scripts/create-adapter/`** - Generate new adapter boilerplate with ports
+- **`scripts/create-service/`** - Create domain and application services with tests
 
 ### VS Code Integration
 
-This project includes VS Code tasks for:
+This project includes VS Code tasks and settings:
 - **Generate gRPC code from proto** - Use Ctrl+Shift+P → "Tasks: Run Task"
+- **Integrated terminal** configured for your platform
+- **Go extension** settings optimized for hexagonal architecture
+
+### Docker Support
+
+```bash
+# Development environment with external dependencies
+make docker-up
+
+# View logs
+make docker-logs
+
+# Stop services  
+make docker-down
+```
 
 ### Project Structure
 
@@ -67,7 +144,7 @@ This project includes VS Code tasks for:
 
 This project follows **Hexagonal Architecture** (Ports & Adapters pattern), also known as the Clean Architecture approach. This architectural pattern allows us to isolate the core business logic from external concerns, making the system more testable, maintainable, and adaptable.
 
-![Hexagonal Architecture Diagram](hexagonal.png)
+![Hexagonal Architecture Diagram](./docs/hexagonal.png)
 
 #### Key Components:
 
@@ -113,3 +190,53 @@ Test coverage reports are generated in GitHub Actions and can be viewed on [Code
 - [ ] Add migration scripts for database setup
 - [ ] Add metrics and tracing
 - [ ] Optimize performance for high-load scenarios
+
+## 📚 Documentation
+
+- **[Architecture Guide](docs/ARCHITECTURE.md)** - Detailed hexagonal architecture explanation
+- **[Development Guide](docs/DEVELOPMENT.md)** - Setup and development workflows
+- **[Testing Guide](docs/TESTING.md)** - Testing strategies and examples
+- **[Task Documentation](doc/task.md)** - Original project requirements
+
+## 🎯 Template Philosophy
+
+This template demonstrates:
+
+1. **Business Logic Isolation** - Core logic independent of external frameworks
+2. **Dependency Inversion** - Dependencies flow inward to the core
+3. **Testability** - Easy to test with mock implementations
+4. **Flexibility** - Easy to swap adapters and add new interfaces
+5. **Maintainability** - Clear separation of concerns and single responsibility
+
+### Why Hexagonal Architecture?
+
+- ✅ **Technology Independence** - Business logic not tied to specific databases or frameworks
+- ✅ **Easy Testing** - Mock external dependencies for fast, reliable tests
+- ✅ **Flexible Integration** - Add HTTP, gRPC, CLI interfaces without changing core logic
+- ✅ **Future-Proof** - Easy to evolve and adapt to new requirements
+- ✅ **Clear Boundaries** - Well-defined contracts between layers
+
+## 🔧 Customization
+
+When using as template:
+
+1. **Update module path** in `go.mod`
+2. **Replace imports** throughout codebase
+3. **Customize entities** in `internal/entity/`
+4. **Define your ports** in `internal/port/`
+5. **Implement services** in `internal/service/`
+6. **Create adapters** in `internal/adapter/`
+7. **Wire everything** in `internal/app/`
+
+## 🤝 Contributing
+
+We welcome contributions! See [DEVELOPMENT.md](docs/DEVELOPMENT.md) for:
+
+- Code style guidelines
+- Testing requirements
+- Pull request process
+- Architecture decisions
+
+## 📄 License
+
+MIT License - feel free to use this template for your projects!
