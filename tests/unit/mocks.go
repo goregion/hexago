@@ -128,6 +128,84 @@ func (m *MockLPTickConsumer) Reset() {
 	m.ErrorMessage = ""
 }
 
+// MockTransactionManager is a mock implementation of port.TransactionManager
+type MockTransactionManager struct {
+	WithTxFunc   func(ctx context.Context) (context.Context, func(), func(), error)
+	CallCount    int
+	ShouldError  bool
+	ErrorMessage string
+}
+
+func NewMockTransactionManager() *MockTransactionManager {
+	mock := &MockTransactionManager{}
+	mock.WithTxFunc = mock.defaultWithTx
+	return mock
+}
+
+func (m *MockTransactionManager) WithTx(ctx context.Context) (context.Context, func(), func(), error) {
+	return m.WithTxFunc(ctx)
+}
+
+func (m *MockTransactionManager) defaultWithTx(ctx context.Context) (context.Context, func(), func(), error) {
+	m.CallCount++
+	if m.ShouldError {
+		return nil, nil, nil, errors.New(m.ErrorMessage)
+	}
+	// Return simple no-op functions for commit and rollback
+	commit := func() {}
+	rollback := func() {}
+	return ctx, commit, rollback, nil
+}
+
+func (m *MockTransactionManager) Reset() {
+	m.CallCount = 0
+	m.ShouldError = false
+	m.ErrorMessage = ""
+}
+
+// MockOHLCRepository is a mock implementation of port.OHLCRepository
+type MockOHLCRepository struct {
+	StoreOHLCFunc func(ctx context.Context, ohlc *entity.OHLC) error
+	StoredOHLCs   []*entity.OHLC
+	CallCount     int
+	ShouldError   bool
+	ErrorMessage  string
+}
+
+func NewMockOHLCRepository() *MockOHLCRepository {
+	mock := &MockOHLCRepository{
+		StoredOHLCs: make([]*entity.OHLC, 0),
+	}
+	mock.StoreOHLCFunc = mock.defaultStoreOHLC
+	return mock
+}
+
+func (m *MockOHLCRepository) StoreOHLC(ctx context.Context, ohlc *entity.OHLC) error {
+	return m.StoreOHLCFunc(ctx, ohlc)
+}
+
+func (m *MockOHLCRepository) defaultStoreOHLC(ctx context.Context, ohlc *entity.OHLC) error {
+	m.CallCount++
+	if m.ShouldError {
+		return errors.New(m.ErrorMessage)
+	}
+	// Handle nil OHLC gracefully
+	if ohlc == nil {
+		return errors.New("nil OHLC provided")
+	}
+	// Create a copy to avoid reference issues
+	ohlcCopy := *ohlc
+	m.StoredOHLCs = append(m.StoredOHLCs, &ohlcCopy)
+	return nil
+}
+
+func (m *MockOHLCRepository) Reset() {
+	m.StoredOHLCs = make([]*entity.OHLC, 0)
+	m.CallCount = 0
+	m.ShouldError = false
+	m.ErrorMessage = ""
+}
+
 // Test data creation helpers
 
 // CreateTestTick creates a test tick with specified values

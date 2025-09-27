@@ -10,10 +10,11 @@ import (
 )
 
 func TestOHLCCreator_NewOHLCCreator(t *testing.T) {
-	mockPublisher1 := unit.NewMockOHLCPublisher()
-	mockPublisher2 := unit.NewMockOHLCPublisher()
+	mockPublisher := unit.NewMockOHLCPublisher()
+	mockTxManager := unit.NewMockTransactionManager()
+	mockRepository := unit.NewMockOHLCRepository()
 
-	creator := service_ohlc.NewOHLCCreator(service_ohlc.USE_BID_PRICE, mockPublisher1, mockPublisher2)
+	creator := service_ohlc.NewOHLCCreator(service_ohlc.USE_BID_PRICE, mockPublisher, mockTxManager, mockRepository)
 
 	if creator == nil {
 		t.Fatal("OHLCCreator should not be nil")
@@ -22,7 +23,9 @@ func TestOHLCCreator_NewOHLCCreator(t *testing.T) {
 
 func TestOHLCCreator_ConsumeTickRange_WithBidPrice(t *testing.T) {
 	mockPublisher := unit.NewMockOHLCPublisher()
-	creator := service_ohlc.NewOHLCCreator(service_ohlc.USE_BID_PRICE, mockPublisher)
+	mockTxManager := unit.NewMockTransactionManager()
+	mockRepository := unit.NewMockOHLCRepository()
+	creator := service_ohlc.NewOHLCCreator(service_ohlc.USE_BID_PRICE, mockPublisher, mockTxManager, mockRepository)
 
 	// Create test ticks with bid prices
 	ticks := []*entity.Tick{
@@ -72,7 +75,9 @@ func TestOHLCCreator_ConsumeTickRange_WithBidPrice(t *testing.T) {
 
 func TestOHLCCreator_ConsumeTickRange_WithAskPrice(t *testing.T) {
 	mockPublisher := unit.NewMockOHLCPublisher()
-	creator := service_ohlc.NewOHLCCreator(service_ohlc.USE_ASK_PRICE, mockPublisher)
+	mockTxManager := unit.NewMockTransactionManager()
+	mockRepository := unit.NewMockOHLCRepository()
+	creator := service_ohlc.NewOHLCCreator(service_ohlc.USE_ASK_PRICE, mockPublisher, mockTxManager, mockRepository)
 
 	// Create test ticks with ask prices
 	ticks := []*entity.Tick{
@@ -108,7 +113,9 @@ func TestOHLCCreator_ConsumeTickRange_WithAskPrice(t *testing.T) {
 
 func TestOHLCCreator_ConsumeTickRange_EmptyTickRange(t *testing.T) {
 	mockPublisher := unit.NewMockOHLCPublisher()
-	creator := service_ohlc.NewOHLCCreator(service_ohlc.USE_BID_PRICE, mockPublisher)
+	mockTxManager := unit.NewMockTransactionManager()
+	mockRepository := unit.NewMockOHLCRepository()
+	creator := service_ohlc.NewOHLCCreator(service_ohlc.USE_BID_PRICE, mockPublisher, mockTxManager, mockRepository)
 
 	// Empty tick range
 	tickRange := unit.CreateTestTickRange("BTCUSDT", 1000, 5000, []*entity.Tick{})
@@ -141,7 +148,9 @@ func TestOHLCCreator_ConsumeTickRange_EmptyTickRange(t *testing.T) {
 
 func TestOHLCCreator_ConsumeTickRange_SingleTick(t *testing.T) {
 	mockPublisher := unit.NewMockOHLCPublisher()
-	creator := service_ohlc.NewOHLCCreator(service_ohlc.USE_BID_PRICE, mockPublisher)
+	mockTxManager := unit.NewMockTransactionManager()
+	mockRepository := unit.NewMockOHLCRepository()
+	creator := service_ohlc.NewOHLCCreator(service_ohlc.USE_BID_PRICE, mockPublisher, mockTxManager, mockRepository)
 
 	// Single tick
 	ticks := []*entity.Tick{
@@ -175,8 +184,9 @@ func TestOHLCCreator_ConsumeTickRange_SingleTick(t *testing.T) {
 
 func TestOHLCCreator_ConsumeTickRange_MultiplePublishers(t *testing.T) {
 	mockPublisher1 := unit.NewMockOHLCPublisher()
-	mockPublisher2 := unit.NewMockOHLCPublisher()
-	creator := service_ohlc.NewOHLCCreator(service_ohlc.USE_BID_PRICE, mockPublisher1, mockPublisher2)
+	mockTxManager := unit.NewMockTransactionManager()
+	mockRepository := unit.NewMockOHLCRepository()
+	creator := service_ohlc.NewOHLCCreator(service_ohlc.USE_BID_PRICE, mockPublisher1, mockTxManager, mockRepository)
 
 	ticks := []*entity.Tick{
 		unit.CreateTestTick("BTCUSDT", 100.0, 101.0, 1000),
@@ -191,37 +201,32 @@ func TestOHLCCreator_ConsumeTickRange_MultiplePublishers(t *testing.T) {
 		t.Fatalf("ConsumeTickRange should not return error: %v", err)
 	}
 
-	// Both publishers should be called
+	// Publisher should be called
 	if mockPublisher1.CallCount != 1 {
-		t.Errorf("Expected 1 call to first publisher, got %d", mockPublisher1.CallCount)
-	}
-	if mockPublisher2.CallCount != 1 {
-		t.Errorf("Expected 1 call to second publisher, got %d", mockPublisher2.CallCount)
+		t.Errorf("Expected 1 call to publisher, got %d", mockPublisher1.CallCount)
 	}
 
-	// Both should have the same OHLC data
-	if len(mockPublisher1.PublishedOHLCs) != 1 || len(mockPublisher2.PublishedOHLCs) != 1 {
-		t.Fatal("Both publishers should have received OHLC data")
+	// Check that OHLC data is correct
+	if len(mockPublisher1.PublishedOHLCs) != 1 {
+		t.Fatal("Publisher should have received OHLC data")
 	}
 
 	ohlc1 := mockPublisher1.PublishedOHLCs[0]
-	ohlc2 := mockPublisher2.PublishedOHLCs[0]
-
-	if ohlc1.Open != ohlc2.Open || ohlc1.High != ohlc2.High ||
-		ohlc1.Low != ohlc2.Low || ohlc1.Close != ohlc2.Close {
-		t.Error("Both publishers should receive identical OHLC data")
+	if ohlc1.Open != 100.0 || ohlc1.High != 100.0 || ohlc1.Low != 100.0 || ohlc1.Close != 100.0 {
+		t.Error("OHLC data should be correct for single tick")
 	}
 }
 
 func TestOHLCCreator_ConsumeTickRange_PublisherError(t *testing.T) {
 	mockPublisher1 := unit.NewMockOHLCPublisher()
-	mockPublisher2 := unit.NewMockOHLCPublisher()
+	mockTxManager := unit.NewMockTransactionManager()
+	mockRepository := unit.NewMockOHLCRepository()
 
-	// Make first publisher return error
+	// Make publisher return error
 	mockPublisher1.ShouldError = true
 	mockPublisher1.ErrorMessage = "publisher error"
 
-	creator := service_ohlc.NewOHLCCreator(service_ohlc.USE_BID_PRICE, mockPublisher1, mockPublisher2)
+	creator := service_ohlc.NewOHLCCreator(service_ohlc.USE_BID_PRICE, mockPublisher1, mockTxManager, mockRepository)
 
 	ticks := []*entity.Tick{
 		unit.CreateTestTick("BTCUSDT", 100.0, 101.0, 1000),
@@ -237,18 +242,15 @@ func TestOHLCCreator_ConsumeTickRange_PublisherError(t *testing.T) {
 	}
 
 	if mockPublisher1.CallCount != 1 {
-		t.Errorf("Expected 1 call to first publisher, got %d", mockPublisher1.CallCount)
-	}
-
-	// Second publisher should not be called due to error in first
-	if mockPublisher2.CallCount != 0 {
-		t.Errorf("Expected 0 calls to second publisher after first fails, got %d", mockPublisher2.CallCount)
+		t.Errorf("Expected 1 call to publisher, got %d", mockPublisher1.CallCount)
 	}
 }
 
 func TestOHLCCreator_ConsumeTickRange_ZeroPrices(t *testing.T) {
 	mockPublisher := unit.NewMockOHLCPublisher()
-	creator := service_ohlc.NewOHLCCreator(service_ohlc.USE_BID_PRICE, mockPublisher)
+	mockTxManager := unit.NewMockTransactionManager()
+	mockRepository := unit.NewMockOHLCRepository()
+	creator := service_ohlc.NewOHLCCreator(service_ohlc.USE_BID_PRICE, mockPublisher, mockTxManager, mockRepository)
 
 	// Ticks with zero and negative prices
 	ticks := []*entity.Tick{

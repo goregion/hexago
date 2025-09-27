@@ -58,7 +58,7 @@ func (db *Client) WithTx(ctx context.Context) (context.Context, CommitTxFunc, Ro
 
 	sqlTx, err := sqlDB.BeginTx(ctx,
 		&sql.TxOptions{
-			Isolation: sql.LevelSerializable,
+			Isolation: sql.LevelReadCommitted,
 			ReadOnly:  false,
 		},
 	)
