@@ -130,6 +130,38 @@ docker-logs: ## Show Docker logs
 	@echo "Showing Docker logs..."
 	@docker-compose logs -f
 
+docker-restart: ## Restart Docker services
+	@echo "Restarting Docker services..."
+	@docker-compose restart
+
+docker-clean: ## Clean Docker resources
+	@echo "Cleaning Docker resources..."
+	@docker-compose down -v --remove-orphans
+	@docker system prune -f
+
+docker-monitoring: ## Start with monitoring stack (Prometheus/Grafana)
+	@echo "Starting services with monitoring..."
+	@docker-compose --profile monitoring up -d
+
+docker-shell: ## Open shell in running container
+	@echo "Opening shell in hexago container..."
+	@docker-compose exec hexago sh
+
+# Development environment
+dev-setup: setup-dev ## Setup development environment (alias)
+
+dev-run: generate ## Run application in development mode
+	@echo "Starting development server..."
+	@go run ./cmd/all-in-one
+
+dev-watch: ## Run with file watching (requires air)
+	@echo "Starting development server with hot reload..."
+	@air -c .air.toml
+
+dev-test-watch: ## Run tests with file watching
+	@echo "Running tests with file watching..."
+	@gotestsum --watch ./tests/...
+
 # Template targets for new projects (Go-based, cross-platform)
 template-init: ## Initialize new project from template
 	@echo "Initializing new project from template..."

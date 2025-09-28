@@ -1,12 +1,21 @@
 # Binaries for programs and plugins
 *.exe
+*.exe~
 *.dll
 *.so
 *.dylib
 *.test
 
-# Output of the go coverage tool
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool, specifically when used with LiteIDE
 *.out
+
+# Coverage files
+coverage.out
+coverage.html
+*.coverprofile
 
 # Dependency directories (remove the leading slash if you want to ignore directories in the entire repository)
 vendor/
@@ -17,13 +26,65 @@ go.work.sum
 
 # IDE/editor files
 .idea/
-.vscode/
+.vscode/settings.json
+.vscode/launch.json
 *.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
 
 # Logs
 *.log
+logs/
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
 
 # Build directories
 bin/
 build/
 dist/
+tmp/
+
+# Environment files
+.env
+.env.local
+.env.production
+.env.staging
+!.env.example
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Generated files
+*.pb.go
+*_generated.go
+mock_*.go
+
+# Temporary files
+*.tmp
+*.temp
+
+# Docker volumes
+docker/data/
+docker/logs/
+
+# Node modules (if any frontend tools are used)
+node_modules/
+
+# Cache directories
+.cache/
+*.cache
