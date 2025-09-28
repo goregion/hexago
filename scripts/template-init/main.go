@@ -92,7 +92,7 @@ func main() {
 	}
 
 	// Copy configuration files
-	configFiles := []string{"Makefile", "docker-compose.yml", "Dockerfile", ".env.example", ".env.test", ".gitignore"}
+	configFiles := []string{"Makefile", "docker-compose.yml", ".env.example", ".env.test", ".gitignore"}
 	for _, file := range configFiles {
 		srcFile := filepath.Join("..", file)
 		if _, err := os.Stat(srcFile); err == nil {
